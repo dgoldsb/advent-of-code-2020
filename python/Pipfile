@@ -1,0 +1,15 @@
+[[source]]
+url = "https://${NEXUS_USERNAME}:${NEXUS_PASSWORD}@nexus.global.picnicinternational.com/repository/pypi-public/simple"
+verify_ssl = true
+name = "picnic"
+
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+advent-of-code-data = "*"
+
+[requires]
+python_version = "3.8"
