@@ -1,5 +1,7 @@
 use std::io::{self, BufRead};
 
+const TREE: char = '#';
+
 fn parse_lines() -> Vec<String> {
     let mut vec = Vec::new();
 
@@ -14,14 +16,13 @@ fn parse_lines() -> Vec<String> {
 
 fn slope_down(inputs: &Vec<String>, right: usize, down: usize) -> i128 {
     let mut counter = 0;
-    let tree: char = "#".chars().next().unwrap();
 
     for (i, line) in inputs.iter().enumerate() {
         if (i % down) == 0 {
             let j = i / down;
             let index = (j * right) % line.chars().count();
             let char_at_index = line.chars().nth(index).unwrap();
-            if char_at_index == tree {
+            if char_at_index == TREE {
                 counter += 1;
             }
         }
