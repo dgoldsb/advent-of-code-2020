@@ -1,6 +1,5 @@
 use std::io::{self, BufRead};
 
-
 fn parse_integers() -> Vec<i32> {
     let mut vec = Vec::new();
 
@@ -13,7 +12,6 @@ fn parse_integers() -> Vec<i32> {
     return vec;
 }
 
-
 fn part_a(inputs: &Vec<i32>) -> i32 {
     for x in inputs {
         for y in inputs {
@@ -24,7 +22,6 @@ fn part_a(inputs: &Vec<i32>) -> i32 {
     }
     return -1;
 }
-
 
 fn part_b(inputs: &Vec<i32>) -> i32 {
     for x in inputs {
@@ -39,9 +36,8 @@ fn part_b(inputs: &Vec<i32>) -> i32 {
     return -1;
 }
 
-
 fn main() {
     let inputs = parse_integers();
-    println!("A: {:?}", part_a(&inputs));
-    println!("B: {:?}", part_b(&inputs));
+    println!("A: {}", part_a(&inputs));
+    println!("B: {}", part_b(&inputs));
 }
