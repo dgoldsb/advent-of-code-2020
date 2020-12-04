@@ -12,7 +12,7 @@ fn parse_lines() -> Vec<DatabaseEntry> {
     let mut buffer = String::new();
     let mut stdin = io::stdin();
     match stdin.read_to_string(&mut buffer) {
-        Ok(n) => println!("Parsed {} lines", n),
+        Ok(n) => println!("Parsed {}", n),
         Err(_) => panic!("Could not read from stdin"),
     };
 
