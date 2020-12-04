@@ -1,3 +1,4 @@
+use regex::Regex;
 use std::collections::HashMap;
 use std::io::{self, Read};
 
@@ -25,6 +26,7 @@ fn parse_lines() -> Vec<HashMap<String, String>> {
             passport.insert(split[0].to_string(), split[1].to_string());
         }
 
+        passport.insert("cid".to_string(), "foo".to_string());
         vec.push(passport);
     }
 
@@ -35,7 +37,7 @@ fn count_valid(passports: &Vec<HashMap<String, String>>) -> usize {
     let mut counter = 0;
 
     for passport in passports {
-        if (passport.len() == 8) || (passport.len() == 7 && !passport.contains_key("cid")) {
+        if passport.len() == 8 {
             counter += 1;
         }
     }
@@ -46,8 +48,12 @@ fn count_valid(passports: &Vec<HashMap<String, String>>) -> usize {
 fn count_valid_strict(passports: &Vec<HashMap<String, String>>) -> usize {
     let mut counter = 0;
 
+    let hcl = Regex::new(r"^#[0-9a-f]{6}$").unwrap();
+    let ecl = Regex::new(r"amb|blu|brn|gry|grn|hzl|oth").unwrap();
+    let pid = Regex::new(r"^[0-9]{9}$").unwrap();
+
     for passport in passports {
-        if (passport.len() < 7) || !(passport.len() == 7 && !passport.contains_key("cid")) {
+        if passport.len() < 8 {
             // There are keys missing, no point in validating.
             continue;
         }
@@ -78,14 +84,32 @@ fn count_valid_strict(passports: &Vec<HashMap<String, String>>) -> usize {
 
         // hgt (Height) - a number followed by either cm or in:
         // If cm, the number must be at least 150 and at most 193.
+        if passport["hgt"].contains("cm") {
+            let height: usize = passport["hgt"].replace("cm", "").parse().unwrap();
+            if height < 150 || height > 193 {
+                continue;
+            }
+        }
         // If in, the number must be at least 59 and at most 76.
+        if passport["hgt"].contains("in") {
+            let height: usize = passport["hgt"].replace("in", "").parse().unwrap();
+            if height < 59 || height > 76 {
+                continue;
+            }
+        }
 
         // hcl (Hair Color) - a # followed by exactly six characters 0-9 or a-f.
+        if !hcl.is_match(&passport["hcl"]) {
+            continue;
+        }
 
         // ecl (Eye Color) - exactly one of: amb blu brn gry grn hzl oth.
+        if !ecl.is_match(&passport["ecl"]) {
+            continue;
+        }
 
         // pid (Passport ID) - a nine-digit number, including leading zeroes.
-        if passport["pid"].len() != 9 {
+        if !pid.is_match(&passport["pid"]) {
             continue;
         }
 
