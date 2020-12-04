@@ -59,43 +59,40 @@ fn count_valid_strict(passports: &Vec<HashMap<String, String>>) -> usize {
         }
 
         // byr (Birth Year) - four digits; at least 1920 and at most 2002.
-        {
-            let year: i32 = passport["byr"].parse().unwrap();
-            if year < 1920 || year > 2002 {
-                continue;
-            }
+        match passport["byr"].parse().unwrap() {
+            1920..=2002 => {},
+            _ => continue
         }
 
         // iyr (Issue Year) - four digits; at least 2010 and at most 2020.
-        {
-            let year: i32 = passport["iyr"].parse().unwrap();
-            if year < 2010 || year > 2020 {
-                continue;
-            }
+        match passport["iyr"].parse().unwrap() {
+            2010..=2020 => {},
+            _ => continue
         }
 
         // eyr (Expiration Year) - four digits; at least 2020 and at most 2030.
-        {
-            let year: i32 = passport["eyr"].parse().unwrap();
-            if year < 2020 || year > 2030 {
-                continue;
-            }
+        match passport["eyr"].parse().unwrap() {
+            2020..=2030 => {},
+            _ => continue
         }
 
         // hgt (Height) - a number followed by either cm or in:
         // If cm, the number must be at least 150 and at most 193.
         if passport["hgt"].contains("cm") {
-            let height: usize = passport["hgt"].replace("cm", "").parse().unwrap();
-            if height < 150 || height > 193 {
-                continue;
+            match passport["hgt"].replace("cm", "").parse().unwrap() {
+                150..=193 => {},
+                _ => continue
             }
         }
         // If in, the number must be at least 59 and at most 76.
-        if passport["hgt"].contains("in") {
-            let height: usize = passport["hgt"].replace("in", "").parse().unwrap();
-            if height < 59 || height > 76 {
-                continue;
+        else if passport["hgt"].contains("in") {
+            match passport["hgt"].replace("in", "").parse().unwrap() {
+                59..=76 => {},
+                _ => continue
             }
+        }
+        else {
+            continue;
         }
 
         // hcl (Hair Color) - a # followed by exactly six characters 0-9 or a-f.
