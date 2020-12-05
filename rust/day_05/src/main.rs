@@ -40,10 +40,26 @@ fn parse_seats(inputs: &Vec<(String, String)>) -> Vec<usize> {
         vec.push(seat);
     }
 
+    vec.sort();
     return vec;
+}
+
+fn find_missing_seat(inputs: &Vec<(String, String)>) -> usize {
+    let mut last_seat = parse_seats(inputs).iter().min().unwrap() - 1;
+
+    for seat in parse_seats(inputs) {
+        if seat != (last_seat + 1) {
+            return last_seat + 1;
+        }
+        else {
+            last_seat = seat;
+        }
+    }
+    return 0;
 }
 
 fn main() {
     let inputs = parse_lines();
     println!("A: {}", parse_seats(&inputs).iter().max().unwrap());
+    println!("B: {}", find_missing_seat(&inputs));
 }
