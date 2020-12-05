@@ -1,5 +1,7 @@
 use regex::Regex;
+use std::collections::HashSet;
 use std::io::{self, Read};
+use std::iter::FromIterator;
 
 fn parse_lines() -> Vec<String> {
     let mut buffer = String::new();
@@ -30,25 +32,18 @@ fn parse_bin(input: &String) -> usize {
 }
 
 fn find_missing_seat(seats: &Vec<usize>) -> usize {
-    let mut last_seat = seats.iter().min().unwrap() - 1;
-
-    for seat in seats {
-        if *seat != (last_seat + 1) {
-            return last_seat + 1;
-        } else {
-            last_seat = *seat;
-        }
-    }
-    return 0;
+    let occupied: HashSet<usize> = HashSet::from_iter(seats.iter().cloned());
+    let min = seats.iter().min().unwrap();
+    let max = seats.iter().max().unwrap();
+    return (*min..*max)
+        .skip_while(|i| occupied.contains(&i))
+        .next()
+        .unwrap();
 }
 
 fn main() {
     let inputs = parse_lines();
-
-    // Convert the inputs to seat numbers and sort them.
-    let mut seats: Vec<usize> = inputs.iter().map(|x| parse_bin(x)).collect();
-    seats.sort();
-
+    let seats: Vec<usize> = inputs.iter().map(|x| parse_bin(x)).collect();
     println!("A: {}", seats.iter().max().unwrap());
     println!("B: {}", find_missing_seat(&seats));
 }
