@@ -2,7 +2,6 @@ use regex::Regex;
 use std::collections::HashMap;
 use std::io::{self, Read};
 
-
 fn parse_lines() -> Vec<HashMap<String, String>> {
     let mut vec = Vec::new();
 
@@ -60,38 +59,37 @@ fn count_valid_strict(passports: &Vec<HashMap<String, String>>) -> usize {
 
         // byr (Birth Year) - four digits; at least 1920 and at most 2002.
         match passport["byr"].parse().unwrap() {
-            1920..=2002 => {},
-            _ => continue
+            1920..=2002 => {}
+            _ => continue,
         }
 
         // iyr (Issue Year) - four digits; at least 2010 and at most 2020.
         match passport["iyr"].parse().unwrap() {
-            2010..=2020 => {},
-            _ => continue
+            2010..=2020 => {}
+            _ => continue,
         }
 
         // eyr (Expiration Year) - four digits; at least 2020 and at most 2030.
         match passport["eyr"].parse().unwrap() {
-            2020..=2030 => {},
-            _ => continue
+            2020..=2030 => {}
+            _ => continue,
         }
 
         // hgt (Height) - a number followed by either cm or in:
         // If cm, the number must be at least 150 and at most 193.
         if passport["hgt"].contains("cm") {
             match passport["hgt"].replace("cm", "").parse().unwrap() {
-                150..=193 => {},
-                _ => continue
+                150..=193 => {}
+                _ => continue,
             }
         }
         // If in, the number must be at least 59 and at most 76.
         else if passport["hgt"].contains("in") {
             match passport["hgt"].replace("in", "").parse().unwrap() {
-                59..=76 => {},
-                _ => continue
+                59..=76 => {}
+                _ => continue,
             }
-        }
-        else {
+        } else {
             continue;
         }
 
