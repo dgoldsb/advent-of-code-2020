@@ -29,13 +29,10 @@ fn parse_lines() -> Vec<Vec<HashSet<char>>> {
 }
 
 fn distinct_in_group(group: &Vec<HashSet<char>>) -> usize {
-    let mut superset: HashSet<char> = HashSet::new();
-
-    for answers in group {
-        superset.extend(answers);
-    }
-
-    return superset.len();
+    return group
+        .iter()
+        .fold(HashSet::new(), |acc, x| acc.union(x).map(|x| *x).collect())
+        .len();
 }
 
 fn part_a(inputs: &Vec<Vec<HashSet<char>>>) -> usize {
@@ -44,13 +41,10 @@ fn part_a(inputs: &Vec<Vec<HashSet<char>>>) -> usize {
 
 fn overlap_in_group(group: &Vec<HashSet<char>>) -> usize {
     let mut group_iter = group.iter();
-    let mut overlap: HashSet<char> = group_iter.next().unwrap().clone();
-
-    for answers in group_iter {
-        overlap = overlap.intersection(&answers).copied().collect();
-    }
-
-    return overlap.len();
+    let overlap: HashSet<char> = group_iter.next().unwrap().clone();
+    return group_iter
+        .fold(overlap, |acc, x| acc.intersection(&x).copied().collect())
+        .len();
 }
 
 fn part_b(inputs: &Vec<Vec<HashSet<char>>>) -> usize {
