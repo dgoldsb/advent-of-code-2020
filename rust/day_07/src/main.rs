@@ -2,8 +2,8 @@ use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use std::io::{self, Read};
 
-fn parse_lines() -> HashMap<String, HashSet<(String, usize)>> {
-    let mut rules: HashMap<String, HashSet<(String, usize)>> = HashMap::new();
+fn parse_lines() -> HashMap<String, HashSet<String>> {
+    let mut input_a: HashMap<String, HashSet<String>> = HashMap::new();
 
     // Define regular expressions.
     let first = Regex::new(r"(.+) bags contain (.+)\.").unwrap();
@@ -26,30 +26,30 @@ fn parse_lines() -> HashMap<String, HashSet<(String, usize)>> {
             let amount: usize = bag[1].parse().unwrap();
             let contained: String = bag[2].parse().unwrap();
 
-            match rules.get_mut(&contained) {
+            match input_a.get_mut(&contained) {
                 Some(s) => {
-                    s.insert((container.clone(), amount));
+                    s.insert(container.clone());
                 }
                 None => {
                     let mut s = HashSet::new();
-                    s.insert((container.clone(), amount));
-                    rules.insert(contained, s);
+                    s.insert(container.clone());
+                    input_a.insert(contained, s);
                 }
             };
         }
     }
 
-    return rules;
+    return input_a;
 }
 
-fn part_a(inputs: &HashMap<String, HashSet<(String, usize)>>, target: &String) -> HashSet<String> {
+fn part_a(inputs: &HashMap<String, HashSet<String>>, target: &String) -> HashSet<String> {
     let mut possible = HashSet::new();
 
     match inputs.get(target) {
         Some(s) => {
             for container in s {
-                possible.insert(container.0.clone());
-                possible.extend(part_a(inputs, &container.0));
+                possible.insert(container.clone());
+                possible.extend(part_a(inputs, &container));
             }
         }
         None => {}
