@@ -46,12 +46,12 @@ fn parse_lines() -> Vec<Operation> {
     return vec;
 }
 
-fn part_a(inputs: &Vec<Operation>) -> i32 {
+fn run_program(inputs: &Vec<Operation>) -> Result<i32, i32> {
     let mut accumulator: i32 = 0;
     let mut index: i32 = 0;
     let mut visited: HashSet<i32> = HashSet::new();
 
-    loop {
+    while !visited.contains(&index) {
         visited.insert(index);
 
         match inputs.get(index as usize).unwrap() {
@@ -63,9 +63,17 @@ fn part_a(inputs: &Vec<Operation>) -> i32 {
             Operation::Nop(_) => index += 1,
         }
 
-        if visited.contains(&index) {
-            return accumulator;
+        if index == (inputs.len() as i32) {
+            return Ok(accumulator);
         }
+    }
+    Err(accumulator)
+}
+
+fn part_a(inputs: &Vec<Operation>) -> i32 {
+    match run_program(inputs) {
+        Ok(_) => panic!("This program should have failed"),
+        Err(i) => return i,
     }
 }
 
@@ -78,26 +86,10 @@ fn part_b(mut inputs: Vec<Operation>) -> i32 {
             Operation::Nop(i) => inputs[m] = Operation::Jmp(*i),
         }
 
-        // Set up for program execution.
-        let mut accumulator: i32 = 0;
-        let mut index: i32 = 0;
-        let mut visited: HashSet<i32> = HashSet::new();
-
-        while !visited.contains(&index) {
-            visited.insert(index);
-
-            match inputs.get(index as usize).unwrap() {
-                Operation::Acc(i) => {
-                    accumulator += i;
-                    index += 1;
-                }
-                Operation::Jmp(i) => index += *i,
-                Operation::Nop(_) => index += 1,
-            }
-
-            if index == (inputs.len() as i32) {
-                return accumulator;
-            }
+        // Run the program.
+        match run_program(&inputs) {
+            Ok(i) => return i,
+            Err(_) => {}
         }
 
         // Revert manipulation.
@@ -107,7 +99,7 @@ fn part_b(mut inputs: Vec<Operation>) -> i32 {
             Operation::Nop(i) => inputs[m] = Operation::Jmp(*i),
         }
     }
-    return 0;
+    panic!("No solution found")
 }
 
 fn main() {
