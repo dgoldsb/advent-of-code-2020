@@ -38,7 +38,6 @@ fn parse_lines() -> Vec<Operation> {
         Err(_) => panic!("Could not read from stdin"),
     };
 
-    // Iterate over all rules.
     for cap in operation_regex.captures_iter(&buffer) {
         vec.push(Operation::from_str(&cap[0]).unwrap());
     }
