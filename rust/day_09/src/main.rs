@@ -1,4 +1,3 @@
-use itertools::Itertools;
 use regex::Regex;
 use std::collections::HashSet;
 use std::io::{self, Read};
@@ -42,22 +41,27 @@ fn part_a(ints: &Vec<i64>, preamble: usize) -> i64 {
     panic!("Did not find a solution");
 }
 
-fn find_set(ints: &Vec<i64>, target: i64, set_size: usize) -> Result<HashSet<i64>, String> {
-    for comb in ints.into_iter().combinations(set_size) {
-        let comb_iter = comb.iter().map(|i| **i);
-        let sum: i64 = comb_iter.clone().sum();
-        if sum == target {
-            return Ok(HashSet::from_iter(comb_iter));
-        }
+fn find_set(ints: &Vec<i64>, target: i64, start: usize, end: usize) -> Result<HashSet<i64>, bool> {
+    let iter = ints[start..end].iter().map(|i| *i);
+    let sum: i64 = iter.clone().sum();
+    if sum == target {
+        return Ok(HashSet::from_iter(iter));
     }
-    Err("No set found of size".to_string())
+    Err(sum > target)
 }
 
 fn part_b(ints: &Vec<i64>, target: i64) -> HashSet<i64> {
-    for set_size in 2..ints.len() {
-        match find_set(ints, target, set_size) {
-            Ok(s) => return s,
-            Err(_) => {}
+    for i in 0..(ints.len() - 1) {
+        for j in i..ints.len() {
+            match find_set(ints, target, i, j) {
+                Ok(s) => return s,
+                Err(b) => {
+                    // If we overshot the target, break out of the loop.
+                    if b {
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -68,12 +72,11 @@ fn main() {
     let inputs = parse_ints();
 
     // Part A to determine the target number.
-    let invalid_number = part_a(&inputs, 5);
+    let invalid_number = part_a(&inputs, 25);
     println!("A: {}", invalid_number);
 
     // Part B to find the contiguous set.
     let contiguous_set = part_b(&inputs, invalid_number);
-    println!("{:?}", contiguous_set);
     println!(
         "B: {}",
         contiguous_set.iter().min().unwrap() + contiguous_set.iter().max().unwrap()
