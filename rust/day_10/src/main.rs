@@ -101,12 +101,12 @@ fn find_ways(inputs: &Vec<i64>, pointer: usize) -> usize {
 
     let mut ways = 0;
 
-    for i in 1..4 {
-        if pointer >= i {
-            let difference: i64 = inputs[pointer] - inputs[pointer - i];
-            if difference < 4 {
-                ways += find_ways(inputs, pointer - i);
-            }
+    for i in 1..(pointer + 1) {
+        let difference: i64 = inputs[pointer] - inputs[pointer - i];
+        if difference < 4 {
+            ways += find_ways(inputs, pointer - i);
+        } else {
+            break;
         }
     }
 
