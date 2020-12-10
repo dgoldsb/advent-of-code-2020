@@ -36,7 +36,34 @@ fn part_a(inputs: &Vec<i64>) -> usize {
         * differences.iter().filter(|x| **x == 3).count();
 }
 
+fn recursively_find(series: &Vec<i64>, start_pointer: usize) -> usize {
+    let mut result = 1;
+
+    for i in start_pointer..(series.len() - 1) {
+        if (series[i + 1] - series[i - 1]) <= 3 {
+            let new_series = [&series[..i], &series[(i + 1)..]].concat();
+            result += recursively_find(&new_series, i);
+        }
+    }
+
+    return result;
+}
+
+fn part_b(inputs: &Vec<i64>) -> usize {
+    let mut cloned_inputs = inputs.clone();
+
+    cloned_inputs.push(0);
+    cloned_inputs.push(inputs.iter().max().unwrap() + 3);
+    cloned_inputs.sort();
+
+
+    let result = recursively_find(&cloned_inputs, 1);
+
+    return result;
+}
+
 fn main() {
     let inputs = parse_ints();
     println!("A: {}", part_a(&inputs));
+    println!("B: {}", part_b(&inputs));
 }
