@@ -1,5 +1,12 @@
+use lazy_static::lazy_static;
 use regex::Regex;
+use std::collections::HashMap;
 use std::io::{self, Read};
+use std::sync::Mutex;
+
+lazy_static! {
+    static ref MEMORY: Mutex<HashMap<usize, usize>> = Mutex::new(HashMap::new());
+}
 
 fn parse_ints() -> Vec<i64> {
     let mut vec = Vec::new();
@@ -83,8 +90,43 @@ fn part_b(inputs: &Vec<i64>) -> usize {
     return result;
 }
 
+fn find_ways(inputs: &Vec<i64>, pointer: usize) -> usize {
+    if MEMORY.lock().unwrap().contains_key(&pointer) {
+        return MEMORY.lock().unwrap()[&pointer];
+    }
+
+    if pointer == 0 {
+        return 1;
+    }
+
+    let mut ways = 0;
+
+    for i in 1..4 {
+        if pointer >= i {
+            let difference: i64 = inputs[pointer] - inputs[pointer - i];
+            if difference < 4 {
+                ways += find_ways(inputs, pointer - i);
+            }
+        }
+    }
+
+    MEMORY.lock().unwrap().insert(pointer, ways);
+    return ways;
+}
+
+fn part_b_dynamic(inputs: &Vec<i64>) -> usize {
+    let mut cloned_inputs = inputs.clone();
+
+    cloned_inputs.push(0);
+    cloned_inputs.push(inputs.iter().max().unwrap() + 3);
+    cloned_inputs.sort();
+
+    return find_ways(&cloned_inputs, cloned_inputs.len() - 1);
+}
+
 fn main() {
     let inputs = parse_ints();
     println!("A: {}", part_a(&inputs));
     println!("B: {}", part_b(&inputs));
+    println!("B (dynamic programming): {}", part_b_dynamic(&inputs));
 }
