@@ -36,19 +36,6 @@ fn part_a(inputs: &Vec<i64>) -> usize {
         * differences.iter().filter(|x| **x == 3).count();
 }
 
-fn recursively_find(series: &Vec<i64>, start_pointer: usize) -> usize {
-    let mut result = 1;
-
-    for i in start_pointer..(series.len() - 1) {
-        if (series[i + 1] - series[i - 1]) <= 3 {
-            let new_series = [&series[..i], &series[(i + 1)..]].concat();
-            result += recursively_find(&new_series, i);
-        }
-    }
-
-    return result;
-}
-
 fn part_b(inputs: &Vec<i64>) -> usize {
     let mut cloned_inputs = inputs.clone();
 
@@ -56,8 +43,42 @@ fn part_b(inputs: &Vec<i64>) -> usize {
     cloned_inputs.push(inputs.iter().max().unwrap() + 3);
     cloned_inputs.sort();
 
+    // Create differences vectors.
+    let mut differences = Vec::new();
+    for i in 1..cloned_inputs.len() {
+        differences.push(cloned_inputs[i] - cloned_inputs[i - 1]);
+    }
 
-    let result = recursively_find(&cloned_inputs, 1);
+    // Iterate over vector.
+    let mut result = 1;
+    for i in 0..differences.len() {
+        // Skip if the pointer is not at a one.
+        if differences[i] != 1 {
+            continue;
+        }
+
+        // Skip if previous was also a one.
+        if (i != 0) && (differences[i - 1] == 1) {
+            continue;
+        }
+
+        // Find block size with iteration forward.
+        let mut block_length: usize = 1;
+        for j in i..differences.len() {
+            if differences[j] != 1 {
+                block_length = j - i;
+                break;
+            }
+        }
+
+        if block_length == 2 {
+            result *= 2
+        } else if block_length == 3 {
+            result *= 4
+        } else if block_length == 4 {
+            result *= 7
+        }
+    }
 
     return result;
 }
