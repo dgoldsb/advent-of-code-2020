@@ -23,8 +23,8 @@ fn parse_lines() -> HashMap<(i64, i64), char> {
 fn count_neighbours_evn(map: &HashMap<(i64, i64), char>, key: &(i64, i64)) -> usize {
     let mut full_count: usize = 0;
 
-    for i in -1..2 {
-        for j in -1..2 {
+    for i in -1..=1 {
+        for j in -1..=1 {
             if (i == 0) && (j == 0) {
                 continue;
             }
@@ -64,8 +64,8 @@ fn look(map: &HashMap<(i64, i64), char>, loc: &(i64, i64), dx: i64, dy: i64) -> 
 fn count_los(map: &HashMap<(i64, i64), char>, key: &(i64, i64)) -> usize {
     let mut full_count: usize = 0;
 
-    for i in -1..2 {
-        for j in -1..2 {
+    for i in -1..=1 {
+        for j in -1..=1 {
             if (i == 0) && (j == 0) {
                 continue;
             }
