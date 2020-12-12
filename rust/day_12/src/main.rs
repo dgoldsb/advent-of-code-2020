@@ -61,13 +61,66 @@ fn translate_inputs(inputs: &Vec<(char, i64)>) -> Vec<(i64, i64)> {
     return new_vec;
 }
 
-fn part_a(inputs: &Vec<(char, i64)>) -> i64 {
-    let translated = translate_inputs(inputs);
+fn translate_waypoint_inputs(inputs: &Vec<(char, i64)>) -> Vec<(i64, i64)> {
+    let mut new_vec = Vec::new();
+
+    let mut waypoint: (i64, i64) = (1, 10);
+
+    for (direction, digits) in inputs {
+        // Rotate the waypoint.
+        if *direction == 'L' {
+            let ticks: usize = (*digits / 90) as usize;
+            for _ in 0..ticks {
+                waypoint = (waypoint.1, -waypoint.0)
+            }
+            continue;
+        } else if *direction == 'R' {
+            let ticks: usize = (*digits / 90) as usize;
+            for _ in 0..ticks {
+                waypoint = (-waypoint.1, waypoint.0)
+            }
+            continue;
+        }
+
+        // Move the waypoint.
+        if *direction == 'N' {
+            waypoint = (waypoint.0 + *digits, waypoint.1);
+            continue;
+        } else if *direction == 'S' {
+            waypoint = (waypoint.0 - *digits, waypoint.1);
+            continue;
+        } else if *direction == 'E' {
+            waypoint = (waypoint.0, waypoint.1 + *digits);
+            continue;
+        } else if *direction == 'W' {
+            waypoint = (waypoint.0, waypoint.1 - *digits);
+            continue;
+        }
+
+        // Move the ship.
+        if *direction == 'F' {
+            for _ in 0..*digits {
+                new_vec.push(waypoint.clone());
+            }
+        }
+    }
+
+    return new_vec;
+}
+
+fn get_distance(inputs: &Vec<(char, i64)>, part_a: bool) -> i64 {
+    let translated: Vec<(i64, i64)>;
+    if part_a {
+        translated = translate_inputs(inputs);
+    } else {
+        translated = translate_waypoint_inputs(inputs);
+    }
     return translated.iter().map(|t| t.0).sum::<i64>().abs()
         + translated.iter().map(|t| t.1).sum::<i64>().abs();
 }
 
 fn main() {
     let inputs = parse_inputs();
-    println!("{}", part_a(&inputs));
+    println!("Part A: {}", get_distance(&inputs, true));
+    println!("Part B: {}", get_distance(&inputs, false));
 }

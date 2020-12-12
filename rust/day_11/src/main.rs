@@ -122,6 +122,6 @@ fn solve(map: &HashMap<(i64, i64), char>, part_a: bool) -> usize {
 
 fn main() {
     let inputs = parse_lines();
-    println!("{:?}", solve(&inputs, true));
-    println!("{:?}", solve(&inputs, false));
+    println!("Part A: {}", solve(&inputs, true));
+    println!("Part B: {}", solve(&inputs, false));
 }
