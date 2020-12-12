@@ -1,28 +1,8 @@
-use regex::Regex;
+use aoc::parse_ints;
 use std::collections::HashSet;
-use std::io::{self, Read};
 use std::iter::FromIterator;
 
-fn parse_ints() -> Vec<i64> {
-    let mut vec = Vec::new();
-    let re = Regex::new(r"([-+]?\d+)\w?").unwrap();
-
-    // Get the stdin and read it into a buffer.
-    let mut buffer = String::new();
-    let mut stdin = io::stdin();
-    match stdin.read_to_string(&mut buffer) {
-        Ok(n) => println!("Parsed {}", n),
-        Err(_) => panic!("Could not read from stdin"),
-    };
-
-    for cap in re.captures_iter(&buffer) {
-        vec.push(cap[1].parse().unwrap());
-    }
-
-    return vec;
-}
-
-fn part_a(ints: &Vec<i64>, preamble: usize) -> i64 {
+fn part_a(ints: &Vec<isize>, preamble: usize) -> isize {
     for i in preamble..ints.len() {
         let mut found: bool = false;
         for j in 1..(preamble + 1) {
@@ -41,16 +21,21 @@ fn part_a(ints: &Vec<i64>, preamble: usize) -> i64 {
     panic!("Did not find a solution");
 }
 
-fn find_set(ints: &Vec<i64>, target: i64, start: usize, end: usize) -> Result<HashSet<i64>, bool> {
+fn find_set(
+    ints: &Vec<isize>,
+    target: isize,
+    start: usize,
+    end: usize,
+) -> Result<HashSet<isize>, bool> {
     let iter = ints[start..end].iter().map(|i| *i);
-    let sum: i64 = iter.clone().sum();
+    let sum: isize = iter.clone().sum();
     if sum == target {
         return Ok(HashSet::from_iter(iter));
     }
     Err(sum > target)
 }
 
-fn part_b(ints: &Vec<i64>, target: i64) -> HashSet<i64> {
+fn part_b(ints: &Vec<isize>, target: isize) -> HashSet<isize> {
     for i in 0..(ints.len() - 1) {
         for j in i..ints.len() {
             match find_set(ints, target, i, j) {

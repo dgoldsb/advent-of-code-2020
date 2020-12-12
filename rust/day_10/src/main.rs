@@ -1,33 +1,13 @@
+use aoc::parse_ints;
 use lazy_static::lazy_static;
-use regex::Regex;
 use std::collections::HashMap;
-use std::io::{self, Read};
 use std::sync::Mutex;
 
 lazy_static! {
     static ref MEMORY: Mutex<HashMap<usize, usize>> = Mutex::new(HashMap::new());
 }
 
-fn parse_ints() -> Vec<i64> {
-    let mut vec = Vec::new();
-    let re = Regex::new(r"([-+]?\d+)\w?").unwrap();
-
-    // Get the stdin and read it into a buffer.
-    let mut buffer = String::new();
-    let mut stdin = io::stdin();
-    match stdin.read_to_string(&mut buffer) {
-        Ok(n) => println!("Parsed {}", n),
-        Err(_) => panic!("Could not read from stdin"),
-    };
-
-    for cap in re.captures_iter(&buffer) {
-        vec.push(cap[1].parse().unwrap());
-    }
-
-    return vec;
-}
-
-fn part_a(inputs: &Vec<i64>) -> usize {
+fn part_a(inputs: &Vec<isize>) -> usize {
     let mut cloned_inputs = inputs.clone();
 
     cloned_inputs.push(0);
@@ -43,7 +23,7 @@ fn part_a(inputs: &Vec<i64>) -> usize {
         * differences.iter().filter(|x| **x == 3).count();
 }
 
-fn part_b(inputs: &Vec<i64>) -> usize {
+fn part_b(inputs: &Vec<isize>) -> usize {
     let mut cloned_inputs = inputs.clone();
 
     cloned_inputs.push(0);
@@ -90,7 +70,7 @@ fn part_b(inputs: &Vec<i64>) -> usize {
     return result;
 }
 
-fn find_ways(inputs: &Vec<i64>, pointer: usize) -> usize {
+fn find_ways(inputs: &Vec<isize>, pointer: usize) -> usize {
     if MEMORY.lock().unwrap().contains_key(&pointer) {
         return MEMORY.lock().unwrap()[&pointer];
     }
@@ -102,7 +82,7 @@ fn find_ways(inputs: &Vec<i64>, pointer: usize) -> usize {
     let mut ways = 0;
 
     for i in 1..(pointer + 1) {
-        let difference: i64 = inputs[pointer] - inputs[pointer - i];
+        let difference: isize = inputs[pointer] - inputs[pointer - i];
         if difference < 4 {
             ways += find_ways(inputs, pointer - i);
         } else {
@@ -114,7 +94,7 @@ fn find_ways(inputs: &Vec<i64>, pointer: usize) -> usize {
     return ways;
 }
 
-fn part_b_dynamic(inputs: &Vec<i64>) -> usize {
+fn part_b_dynamic(inputs: &Vec<isize>) -> usize {
     let mut cloned_inputs = inputs.clone();
 
     cloned_inputs.push(0);
