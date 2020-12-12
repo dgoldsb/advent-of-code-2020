@@ -3,7 +3,7 @@ use std::io::{self, Read};
 
 const DIRS: [&'static char; 4] = [&'E', &'S', &'W', &'N'];
 
-fn parse_inputs() -> Vec<(char, i64)> {
+fn parse_inputs() -> Vec<(char, isize)> {
     let mut vec = Vec::new();
     let re = Regex::new(r"([NESWLRF])(\d+)").unwrap();
 
@@ -22,7 +22,7 @@ fn parse_inputs() -> Vec<(char, i64)> {
     return vec;
 }
 
-fn translate_inputs(inputs: &Vec<(char, i64)>) -> Vec<(i64, i64)> {
+fn translate_inputs(inputs: &Vec<(char, isize)>) -> Vec<(isize, isize)> {
     let mut new_vec = Vec::new();
 
     let mut dir_pointer: usize = 0;
@@ -61,10 +61,10 @@ fn translate_inputs(inputs: &Vec<(char, i64)>) -> Vec<(i64, i64)> {
     return new_vec;
 }
 
-fn translate_waypoint_inputs(inputs: &Vec<(char, i64)>) -> Vec<(i64, i64)> {
+fn translate_waypoint_inputs(inputs: &Vec<(char, isize)>) -> Vec<(isize, isize)> {
     let mut new_vec = Vec::new();
 
-    let mut waypoint: (i64, i64) = (1, 10);
+    let mut waypoint: (isize, isize) = (1, 10);
 
     for (direction, digits) in inputs {
         // Rotate the waypoint.
@@ -108,15 +108,15 @@ fn translate_waypoint_inputs(inputs: &Vec<(char, i64)>) -> Vec<(i64, i64)> {
     return new_vec;
 }
 
-fn get_distance(inputs: &Vec<(char, i64)>, part_a: bool) -> i64 {
-    let translated: Vec<(i64, i64)>;
+fn get_distance(inputs: &Vec<(char, isize)>, part_a: bool) -> isize {
+    let translated: Vec<(isize, isize)>;
     if part_a {
         translated = translate_inputs(inputs);
     } else {
         translated = translate_waypoint_inputs(inputs);
     }
-    return translated.iter().map(|t| t.0).sum::<i64>().abs()
-        + translated.iter().map(|t| t.1).sum::<i64>().abs();
+    return translated.iter().map(|t| t.0).sum::<isize>().abs()
+        + translated.iter().map(|t| t.1).sum::<isize>().abs();
 }
 
 fn main() {
