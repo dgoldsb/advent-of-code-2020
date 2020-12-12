@@ -1,5 +1,5 @@
 use regex::Regex;
-use std::io::{self, Read};
+use std::io::{self, BufRead, Read};
 
 pub fn parse_ints() -> Vec<isize> {
     let mut vec = Vec::new();
@@ -15,6 +15,18 @@ pub fn parse_ints() -> Vec<isize> {
 
     for cap in re.captures_iter(&buffer) {
         vec.push(cap[1].parse().unwrap());
+    }
+
+    return vec;
+}
+
+pub fn parse_lines() -> Vec<String> {
+    let mut vec = Vec::new();
+
+    let stdin = io::stdin();
+    for line in stdin.lock().lines() {
+        let line = line.expect("Could not read line from standard in");
+        vec.push(line);
     }
 
     return vec;

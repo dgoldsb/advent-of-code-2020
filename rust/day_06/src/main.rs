@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::io::{self, Read};
 
-fn parse_lines() -> Vec<Vec<HashSet<char>>> {
+fn parse_inputs() -> Vec<Vec<HashSet<char>>> {
     let mut vec = Vec::new();
 
     // Get the stdin and read it into a buffer.
@@ -52,7 +52,7 @@ fn part_b(inputs: &Vec<Vec<HashSet<char>>>) -> usize {
 }
 
 fn main() {
-    let inputs = parse_lines();
+    let inputs = parse_inputs();
     println!("A: {}", part_a(&inputs));
     println!("B: {}", part_b(&inputs));
 }

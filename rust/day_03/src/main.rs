@@ -1,18 +1,6 @@
-use std::io::{self, BufRead};
+use aoc::parse_lines;
 
 const TREE: char = '#';
-
-fn parse_lines() -> Vec<String> {
-    let mut vec = Vec::new();
-
-    let stdin = io::stdin();
-    for line in stdin.lock().lines() {
-        let line = line.expect("Could not read line from standard in");
-        vec.push(line);
-    }
-
-    return vec;
-}
 
 fn slope_down(inputs: &Vec<String>, right: usize, down: usize) -> i128 {
     let mut counter = 0;

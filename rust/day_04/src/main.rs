@@ -2,7 +2,7 @@ use regex::Regex;
 use std::collections::HashMap;
 use std::io::{self, Read};
 
-fn parse_lines() -> Vec<HashMap<String, String>> {
+fn parse_inputs() -> Vec<HashMap<String, String>> {
     let mut vec = Vec::new();
 
     // Get the stdin and read it into a buffer.
@@ -115,7 +115,7 @@ fn count_valid_strict(passports: &Vec<HashMap<String, String>>) -> usize {
 }
 
 fn main() {
-    let inputs = parse_lines();
+    let inputs = parse_inputs();
     println!("A: {}", count_valid(&inputs));
     println!("B: {}", count_valid_strict(&inputs));
 }

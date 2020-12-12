@@ -5,7 +5,7 @@ const EMPTY: char = 'L';
 const FLOOR: char = '.';
 const FULL: char = '#';
 
-fn parse_lines() -> HashMap<(i64, i64), char> {
+fn parse_inputs() -> HashMap<(i64, i64), char> {
     let mut map = HashMap::new();
 
     let stdin = io::stdin();
@@ -121,7 +121,7 @@ fn solve(map: &HashMap<(i64, i64), char>, part_a: bool) -> usize {
 }
 
 fn main() {
-    let inputs = parse_lines();
+    let inputs = parse_inputs();
     println!("Part A: {}", solve(&inputs, true));
     println!("Part B: {}", solve(&inputs, false));
 }

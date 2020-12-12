@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use std::io::{self, Read};
 use std::iter::FromIterator;
 
-fn parse_lines() -> Vec<String> {
+fn parse_inputs() -> Vec<String> {
     let mut buffer = String::new();
     let mut stdin = io::stdin();
     match stdin.read_to_string(&mut buffer) {
@@ -42,7 +42,7 @@ fn find_missing_seat(seats: &Vec<usize>) -> usize {
 }
 
 fn main() {
-    let inputs = parse_lines();
+    let inputs = parse_inputs();
     let seats: Vec<usize> = inputs.iter().map(|x| parse_bin(x)).collect();
     println!("A: {}", seats.iter().max().unwrap());
     println!("B: {}", find_missing_seat(&seats));

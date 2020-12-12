@@ -8,7 +8,7 @@ struct DatabaseEntry {
     password: String,
 }
 
-fn parse_lines() -> Vec<DatabaseEntry> {
+fn parse_inputs() -> Vec<DatabaseEntry> {
     let mut buffer = String::new();
     let mut stdin = io::stdin();
     match stdin.read_to_string(&mut buffer) {
@@ -60,7 +60,7 @@ fn part_b(entries: &Vec<DatabaseEntry>) -> i32 {
 }
 
 fn main() {
-    let inputs = parse_lines();
+    let inputs = parse_inputs();
     println!("A: {}", part_a(&inputs));
     println!("B: {}", part_b(&inputs));
 }

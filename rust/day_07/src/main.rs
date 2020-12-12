@@ -2,7 +2,7 @@ use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use std::io::{self, Read};
 
-fn parse_lines() -> (
+fn parse_inputs() -> (
     HashMap<String, HashSet<String>>,
     HashMap<String, HashSet<(String, usize)>>,
 ) {
@@ -92,7 +92,7 @@ fn part_b(inputs: &HashMap<String, HashSet<(String, usize)>>, container: &String
 }
 
 fn main() {
-    let inputs = parse_lines();
+    let inputs = parse_inputs();
     println!("A: {}", part_a(&inputs.0, &"shiny gold".to_string()).len());
     println!("B: {}", part_b(&inputs.1, &"shiny gold".to_string()));
 }

@@ -26,7 +26,7 @@ impl FromStr for Operation {
     }
 }
 
-fn parse_lines() -> Vec<Operation> {
+fn parse_inputs() -> Vec<Operation> {
     let mut vec = Vec::new();
     let operation_regex = Regex::new(r"\w+ [+-](\d+)").unwrap();
 
@@ -102,7 +102,7 @@ fn part_b(mut inputs: Vec<Operation>) -> i32 {
 }
 
 fn main() {
-    let inputs = parse_lines();
+    let inputs = parse_inputs();
     println!("A: {}", part_a(&inputs));
     println!("B: {}", part_b(inputs));
 }
