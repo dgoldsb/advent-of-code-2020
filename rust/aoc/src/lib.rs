@@ -3,7 +3,7 @@ use std::io::{self, BufRead, Read};
 
 pub fn parse_ints() -> Vec<isize> {
     let mut vec = Vec::new();
-    let re = Regex::new(r"([-+]?\d+)\w?").unwrap();
+    let re = Regex::new(r"([-+]?\d+)\D?").unwrap();
 
     // Get the stdin and read it into a buffer.
     let mut buffer = String::new();
