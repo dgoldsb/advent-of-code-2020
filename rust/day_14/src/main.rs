@@ -31,39 +31,18 @@ fn parse_inputs() -> Vec<Instruction> {
     return instructions;
 }
 
-fn to_bin(number: &usize) -> Vec<char> {
-    return format!("{:0>36}", format!("{:b}", number))
-        .chars()
-        .collect();
-}
-
-fn from_bin(bin_number: &Vec<char>) -> usize {
-    let bin_str: String = bin_number.into_iter().collect();
-    return usize::from_str_radix(&bin_str, 2).unwrap();
-}
-
-fn apply_mask_a(number: &usize, mask: &Vec<char>) -> usize {
-    let mut bin_number = to_bin(number);
-
-    for i in 0..36 {
-        match mask[i] {
-            '0' => bin_number[i] = '0',
-            '1' => bin_number[i] = '1',
-            'X' => continue,
-            _ => panic!("Invalid value in mask!"),
-        }
-    }
-
-    return from_bin(&bin_number);
+fn apply_mask_a(number: &usize, mask: &String) -> usize {
+    return (number | usize::from_str_radix(&mask.clone().replace("X", "0"), 2).unwrap())
+        & usize::from_str_radix(&mask.clone().replace("X", "1"), 2).unwrap();
 }
 
 fn part_a(instructions: &Vec<Instruction>) -> HashMap<usize, usize> {
-    let mut current_mask: Vec<char> = Vec::new();
+    let mut current_mask: String = "".to_string();
     let mut memory = HashMap::new();
 
     for instruction in instructions {
         match instruction {
-            Instruction::Mask(m) => current_mask = m.clone().chars().collect(),
+            Instruction::Mask(m) => current_mask = m.clone(),
             Instruction::Mem(t) => {
                 match memory.insert(t.0.clone(), apply_mask_a(&t.1, &current_mask)) {
                     Some(_) => (),
@@ -74,6 +53,17 @@ fn part_a(instructions: &Vec<Instruction>) -> HashMap<usize, usize> {
     }
 
     return memory;
+}
+
+fn to_bin(number: &usize) -> Vec<char> {
+    return format!("{:0>36}", format!("{:b}", number))
+        .chars()
+        .collect();
+}
+
+fn from_bin(bin_number: &Vec<char>) -> usize {
+    let bin_str: String = bin_number.into_iter().collect();
+    return usize::from_str_radix(&bin_str, 2).unwrap();
 }
 
 fn apply_floating_bits(input: &Vec<char>) -> Vec<Vec<char>> {
@@ -145,7 +135,9 @@ mod tests {
                 Instruction::Mem((8, 11)),
                 Instruction::Mem((7, 101)),
                 Instruction::Mem((8, 0))
-            ]).values().sum::<usize>(),
+            ])
+            .values()
+            .sum::<usize>(),
             165
         );
     }
@@ -158,7 +150,9 @@ mod tests {
                 Instruction::Mem((42, 100)),
                 Instruction::Mask("00000000000000000000000000000000X0XX".to_string()),
                 Instruction::Mem((26, 1))
-            ]).values().sum::<usize>(),
+            ])
+            .values()
+            .sum::<usize>(),
             208
         );
     }
