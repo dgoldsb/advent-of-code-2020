@@ -76,9 +76,59 @@ fn part_a(instructions: &Vec<Instruction>) -> HashMap<usize, usize> {
     return memory;
 }
 
+fn apply_floating_bits(input: &Vec<char>) -> Vec<Vec<char>> {
+    match input.iter().position(|c| *c == 'X') {
+        Some(i) => {
+            let mut input_0 = input.clone();
+            input_0[i] = '0';
+            let mut input_1 = input.clone();
+            input_1[i] = '1';
+            let mut vec = apply_floating_bits(&input_0);
+            vec.extend(apply_floating_bits(&input_1));
+            vec
+        }
+        None => vec![input.clone()],
+    }
+}
+
+fn apply_mask_b(number: &usize, mask: &Vec<char>) -> Vec<usize> {
+    let mut bin_number = to_bin(number);
+
+    for i in 0..36 {
+        match mask[i] {
+            '0' => continue,
+            '1' => bin_number[i] = '1',
+            'X' => bin_number[i] = 'X',
+            _ => panic!("Invalid value in mask!"),
+        }
+    }
+
+    let bin_numbers = apply_floating_bits(&bin_number);
+
+    return bin_numbers.iter().map(|b| from_bin(&b)).collect();
+}
+
+fn part_b(instructions: &Vec<Instruction>) -> HashMap<usize, usize> {
+    let mut current_mask: Vec<char> = Vec::new();
+    let mut memory = HashMap::new();
+
+    for instruction in instructions {
+        match instruction {
+            Instruction::Mask(m) => current_mask = m.clone().chars().collect(),
+            Instruction::Mem(t) => {
+                for mem in apply_mask_b(&t.0, &current_mask) {
+                    memory.insert(mem, t.1.clone());
+                }
+            }
+        }
+    }
+
+    return memory;
+}
+
 fn main() {
     let inputs = parse_inputs();
 
     println!("A: {}", part_a(&inputs).values().sum::<usize>());
-    println!("B: {}", 0);
+    println!("B: {}", part_b(&inputs).values().sum::<usize>());
 }
