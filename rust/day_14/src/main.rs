@@ -132,3 +132,34 @@ fn main() {
     println!("A: {}", part_a(&inputs).values().sum::<usize>());
     println!("B: {}", part_b(&inputs).values().sum::<usize>());
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn part1_example() {
+        assert_eq!(
+            part_a(&vec![
+                Instruction::Mask("XXXXXXXXXXXXXXXXXXXXXXXXXXXXX1XXXX0X".to_string()),
+                Instruction::Mem((8, 11)),
+                Instruction::Mem((7, 101)),
+                Instruction::Mem((8, 0))
+            ]).values().sum::<usize>(),
+            165
+        );
+    }
+
+    #[test]
+    fn part2_example() {
+        assert_eq!(
+            part_b(&vec![
+                Instruction::Mask("000000000000000000000000000000X1001X".to_string()),
+                Instruction::Mem((42, 100)),
+                Instruction::Mask("00000000000000000000000000000000X0XX".to_string()),
+                Instruction::Mem((26, 1))
+            ]).values().sum::<usize>(),
+            208
+        );
+    }
+}
