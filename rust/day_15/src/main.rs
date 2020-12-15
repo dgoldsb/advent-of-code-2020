@@ -3,7 +3,10 @@ use std::collections::HashMap;
 
 fn play_game(inputs: &Vec<isize>, duration: usize) -> usize {
     let mut memory: HashMap<usize, usize> = HashMap::new();
-    let mut last_number: usize = *inputs.get(0).unwrap() as usize;
+    let mut last_number: usize = *inputs
+        .get(0)
+        .expect("Input should have length greater than zero")
+        as usize;
 
     for i in 1..duration {
         let next_number = match inputs.get(i) {
