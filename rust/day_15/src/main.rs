@@ -1,7 +1,7 @@
 use aoc::parse_ints;
 use std::collections::HashMap;
 
-fn play_game(inputs: &Vec<isize>, duration: usize) -> (usize, HashMap<usize, usize>) {
+fn play_game(inputs: &Vec<isize>, duration: usize) -> usize {
     let mut memory: HashMap<usize, usize> = HashMap::new();
     let mut last_number: usize = 0;
 
@@ -17,17 +17,14 @@ fn play_game(inputs: &Vec<isize>, duration: usize) -> (usize, HashMap<usize, usi
         last_number = next_number;
     }
 
-    return (last_number, memory);
-}
-
-fn part_a(inputs: &Vec<isize>, duration: usize) -> usize {
-    return play_game(inputs, duration).0;
+    return last_number;
 }
 
 fn main() {
     let inputs = parse_ints();
 
-    println!("A: {}", part_a(&inputs, 2020));
+    println!("A: {}", play_game(&inputs, 2020));
+    println!("B: {}", play_game(&inputs, 30000000));
 }
 
 #[cfg(test)]
@@ -36,6 +33,6 @@ mod tests {
 
     #[test]
     fn part1_example() {
-        assert_eq!(part_a(&vec![0, 3, 6], 2020), 436,);
+        assert_eq!(play_game(&vec![0, 3, 6], 2020), 436,);
     }
 }
