@@ -3,9 +3,9 @@ use std::collections::HashMap;
 
 fn play_game(inputs: &Vec<isize>, duration: usize) -> usize {
     let mut memory: HashMap<usize, usize> = HashMap::new();
-    let mut last_number: usize = 0;
+    let mut last_number: usize = *inputs.get(0).unwrap() as usize;
 
-    for i in 0..duration {
+    for i in 1..duration {
         let next_number = match inputs.get(i) {
             Some(m) => *m as usize,
             None => match memory.get(&last_number) {
@@ -33,6 +33,16 @@ mod tests {
 
     #[test]
     fn part1_example() {
-        assert_eq!(play_game(&vec![0, 3, 6], 2020), 436,);
+        assert_eq!(play_game(&vec![0, 3, 6], 2020), 436);
+    }
+
+    #[test]
+    fn part2_example_1() {
+        assert_eq!(play_game(&vec![0, 3, 6], 30000000), 175594);
+    }
+
+    #[test]
+    fn part2_example_2() {
+        assert_eq!(play_game(&vec![1, 3, 2], 30000000), 2578);
     }
 }
