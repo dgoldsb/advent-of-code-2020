@@ -1,8 +1,9 @@
 use aoc::parse_lines;
 use regex::Regex;
+use std::collections::HashSet;
 use std::ops::RangeInclusive;
 
-#[derive(Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 struct Rule {
     field: String,
     lower: RangeInclusive<usize>,
@@ -19,7 +20,7 @@ fn parse_inputs() -> (Vec<Rule>, Vec<Vec<usize>>) {
     let mut rules = Vec::new();
     let mut tickets = Vec::new();
 
-    let rule_regex = Regex::new(r"(\w+): (\d+)-(\d+) or (\d+)-(\d+)").unwrap();
+    let rule_regex = Regex::new(r"([\s\w]+): (\d+)-(\d+) or (\d+)-(\d+)").unwrap();
     let int_regex = Regex::new(r"(\d+)\D?").unwrap();
 
     for line in parse_lines() {
@@ -71,11 +72,74 @@ fn find_error_rate(rules: &Vec<Rule>, tickets: &Vec<Vec<usize>>) -> usize {
         .sum();
 }
 
+fn find_valid_rule(
+    rules: &Vec<Rule>,
+    tickets: &Vec<Vec<usize>>,
+    index: usize,
+) -> Result<Rule, usize> {
+    let mut valid_rules = Vec::new();
+    for rule in rules {
+        if tickets
+            .iter()
+            .filter(|t| !rule.is_valid(t.get(index).unwrap()))
+            .count()
+            == 0
+        {
+            valid_rules.push(rule.clone());
+        }
+    }
+
+    match valid_rules.len() {
+        1 => Ok(valid_rules.get(0).unwrap().clone()),
+        _ => Err(valid_rules.len()),
+    }
+}
+
+fn part_2(rules: &Vec<Rule>, tickets: &Vec<Vec<usize>>) -> usize {
+    let mut result: usize = 1;
+    let my_ticket = tickets.iter().next().expect("Must supply tickets!");
+    let valid_tickets = tickets
+        .iter()
+        .filter(|t| find_ticket_error_rate(rules, t) == 0)
+        .map(|t| t.clone())
+        .collect();
+    let mut column_indices: HashSet<usize> = (0..my_ticket.len()).collect();
+    let mut unmapped_rules = (*rules).clone();
+
+    loop {
+        for index in column_indices.clone() {
+            match find_valid_rule(&unmapped_rules, &valid_tickets, index) {
+                Ok(r) => {
+                    if r.field.contains("departure") {
+                        result *= *my_ticket.get(index).unwrap();
+                    }
+
+                    column_indices.remove(&index);
+                    unmapped_rules.remove(
+                        unmapped_rules
+                            .iter()
+                            .position(|p| *p == r)
+                            .expect("Rule should be in unmapped rules"),
+                    );
+                    break;
+                }
+                Err(_) => continue,
+            }
+        }
+
+        if column_indices.len() == 0 {
+            break;
+        }
+    }
+
+    return result;
+}
+
 fn main() {
     let inputs = parse_inputs();
 
     println!("A: {}", find_error_rate(&inputs.0, &inputs.1));
-    println!("B: {}", 0);
+    println!("B: {}", part_2(&inputs.0, &inputs.1));
 }
 
 #[cfg(test)]
