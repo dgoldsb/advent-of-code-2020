@@ -9,11 +9,14 @@ enum Rule {
     Split((Vec<isize>, Vec<isize>)),
 }
 
-fn cartesian_product(a: &Vec<String>, b: &Vec<String>) -> Vec<String> {
+fn cartesian_product(a: &Vec<String>, b: &Vec<String>, messages: &Vec<String>) -> Vec<String> {
     let mut result = Vec::new();
     for x in a {
         for y in b {
-            result.push(x.clone() + y);
+            let new_vec = x.clone() + y;
+            if messages.iter().filter(|&m| m.contains(&new_vec)).count() > 0 {
+                result.push(new_vec);
+            }
         }
     }
     return result;
@@ -23,11 +26,10 @@ impl Rule {
     fn expand(
         &self,
         others: &HashMap<isize, Rule>,
-        max_depth: &usize,
-        caller_depth: &usize,
+        max_recursion_depth: &usize,
+        recursion_depth: &usize,
+        messages: &Vec<String>,
     ) -> Vec<String> {
-        let depth: &usize = &(caller_depth + 1);
-        println!("Depth: {}", depth);
         return match self {
             Rule::Base(c) => vec![c.clone().to_string()],
             Rule::Concat(v) => {
@@ -35,17 +37,37 @@ impl Rule {
                 for rule_id in v {
                     result = cartesian_product(
                         &result,
-                        &others[rule_id].expand(others, max_depth, depth),
+                        &others[rule_id].expand(others, max_recursion_depth, &recursion_depth, messages),
+                        messages,
                     );
                 }
                 result
             }
             Rule::Split(t) => {
-                let mut first = Rule::Concat(t.0.clone()).expand(others, max_depth, depth);
-                if depth < max_depth {
-                    first.extend(Rule::Concat(t.1.clone()).expand(others, max_depth, depth));
+                let depth: usize;
+
+                if t.1.contains(&8) || t.1.contains(&11) {
+                    depth = recursion_depth + 1;
+                    println!("Increasing recursion depth: {}", depth);
+                    println!("Coming up: {:?}", t.1);
                 } else {
-                    println!("Hit maximum recursion depth, ignoring recursive call");
+                    depth = 0;
+                }
+
+                let mut first =
+                    Rule::Concat(t.0.clone()).expand(others, max_recursion_depth, &depth, messages);
+                if depth < *max_recursion_depth {
+                    first.extend(Rule::Concat(t.1.clone()).expand(
+                        others,
+                        max_recursion_depth,
+                        &depth,
+                        messages,
+                    ));
+                } else {
+                    println!(
+                        "Hit maximum recursion depth, ignoring recursive call {:?}",
+                        t.1
+                    );
                 }
                 first
             }
@@ -54,11 +76,10 @@ impl Rule {
 }
 
 fn solve(rules: &HashMap<isize, Rule>, messages: &Vec<String>) -> usize {
-    let max_length = messages.iter().map(|m| m.len()).max().unwrap();
     let whitelist: HashSet<String> = rules
         .get(&0)
         .unwrap()
-        .expand(rules, &max_length, &0)
+        .expand(rules, &4, &0, messages)
         .iter()
         .map(|m| m.clone())
         .collect();
