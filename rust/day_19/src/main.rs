@@ -37,7 +37,12 @@ impl Rule {
                 for rule_id in v {
                     result = cartesian_product(
                         &result,
-                        &others[rule_id].expand(others, max_recursion_depth, &recursion_depth, messages),
+                        &others[rule_id].expand(
+                            others,
+                            max_recursion_depth,
+                            &recursion_depth,
+                            messages,
+                        ),
                         messages,
                     );
                 }
@@ -48,8 +53,6 @@ impl Rule {
 
                 if t.1.contains(&8) || t.1.contains(&11) {
                     depth = recursion_depth + 1;
-                    println!("Increasing recursion depth: {}", depth);
-                    println!("Coming up: {:?}", t.1);
                 } else {
                     depth = 0;
                 }
@@ -63,11 +66,6 @@ impl Rule {
                         &depth,
                         messages,
                     ));
-                } else {
-                    println!(
-                        "Hit maximum recursion depth, ignoring recursive call {:?}",
-                        t.1
-                    );
                 }
                 first
             }
@@ -75,16 +73,22 @@ impl Rule {
     }
 }
 
-fn solve(rules: &HashMap<isize, Rule>, messages: &Vec<String>) -> usize {
+fn solve_one(rules: &HashMap<isize, Rule>, message: String) -> bool {
     let whitelist: HashSet<String> = rules
         .get(&0)
         .unwrap()
-        .expand(rules, &4, &0, messages)
+        .expand(rules, &8, &0, &vec![message.clone()])
         .iter()
         .map(|m| m.clone())
         .collect();
-    println!("Whitelist contains {} items", whitelist.len());
-    return messages.iter().filter(|&m| whitelist.contains(m)).count();
+    return whitelist.contains(&message);
+}
+
+fn solve(rules: &HashMap<isize, Rule>, messages: &Vec<String>) -> usize {
+    return messages
+        .iter()
+        .filter(|&m| solve_one(rules, m.clone()))
+        .count();
 }
 
 fn parse_inputs() -> (HashMap<isize, Rule>, Vec<String>) {
