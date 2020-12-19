@@ -20,33 +20,49 @@ fn cartesian_product(a: &Vec<String>, b: &Vec<String>) -> Vec<String> {
 }
 
 impl Rule {
-    fn expand(&self, others: &HashMap<isize, Rule>) -> Vec<String> {
+    fn expand(
+        &self,
+        others: &HashMap<isize, Rule>,
+        max_depth: &usize,
+        caller_depth: &usize,
+    ) -> Vec<String> {
+        let depth: &usize = &(caller_depth + 1);
+        println!("Depth: {}", depth);
         return match self {
             Rule::Base(c) => vec![c.clone().to_string()],
             Rule::Concat(v) => {
                 let mut result = vec!["".to_string()];
                 for rule_id in v {
-                    result = cartesian_product(&result, &others[rule_id].expand(others));
+                    result = cartesian_product(
+                        &result,
+                        &others[rule_id].expand(others, max_depth, depth),
+                    );
                 }
                 result
             }
             Rule::Split(t) => {
-                let mut first = Rule::Concat(t.0.clone()).expand(others);
-                first.extend(Rule::Concat(t.1.clone()).expand(others));
+                let mut first = Rule::Concat(t.0.clone()).expand(others, max_depth, depth);
+                if depth < max_depth {
+                    first.extend(Rule::Concat(t.1.clone()).expand(others, max_depth, depth));
+                } else {
+                    println!("Hit maximum recursion depth, ignoring recursive call");
+                }
                 first
             }
         };
     }
 }
 
-fn part_a(rules: &HashMap<isize, Rule>, messages: &Vec<String>) -> usize {
+fn solve(rules: &HashMap<isize, Rule>, messages: &Vec<String>) -> usize {
+    let max_length = messages.iter().map(|m| m.len()).max().unwrap();
     let whitelist: HashSet<String> = rules
         .get(&0)
         .unwrap()
-        .expand(rules)
+        .expand(rules, &max_length, &0)
         .iter()
         .map(|m| m.clone())
         .collect();
+    println!("Whitelist contains {} items", whitelist.len());
     return messages.iter().filter(|&m| whitelist.contains(m)).count();
 }
 
@@ -110,7 +126,13 @@ fn parse_inputs() -> (HashMap<isize, Rule>, Vec<String>) {
 fn main() {
     let inputs = parse_inputs();
 
-    println!("A: {}", part_a(&inputs.0, &inputs.1));
+    println!("A: {}", solve(&inputs.0, &inputs.1));
+
+    let mut new_rules = inputs.0;
+    new_rules.insert(8, Rule::Split((vec![42], vec![42, 8])));
+    new_rules.insert(11, Rule::Split((vec![42, 31], vec![42, 11, 31])));
+
+    println!("B: {}", solve(&new_rules, &inputs.1));
 }
 
 #[cfg(test)]
@@ -135,6 +157,6 @@ mod tests {
             "aaaabbb".to_string(),
         ];
 
-        assert_eq!(part_a(&rules, &messages), 2);
+        assert_eq!(solve(&rules, &messages), 2);
     }
 }
