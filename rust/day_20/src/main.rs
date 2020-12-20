@@ -40,28 +40,52 @@ impl PartialEq for Tile {
 
 impl Tile {
     fn fits(&self, other: &Tile, border: Border) -> bool {
-        match border {
-            Border::Down() => return self.get_borders()[2] == other.get_borders()[3],
-            Border::Up() => return self.get_borders()[3] == other.get_borders()[2],
-            Border::Left() => return self.get_borders()[0] == other.get_borders()[1],
-            Border::Right() => return self.get_borders()[1] == other.get_borders()[0],
-        }
+        return match border {
+            Border::Down() => self.get_borders()[2] == other.get_borders()[3],
+            Border::Up() => self.get_borders()[3] == other.get_borders()[2],
+            Border::Left() => self.get_borders()[0] == other.get_borders()[1],
+            Border::Right() => self.get_borders()[1] == other.get_borders()[0],
+        };
     }
 
     fn flip_border(border: &HashSet<isize>) -> HashSet<isize> {
         return border.iter().map(|v| PIXELS - 1 - *v).collect();
     }
 
-    fn get_all_rotation(&self) -> Vec<Tile> {
+    fn get_all_rotations(&self) -> Vec<Tile> {
         return vec![
-            Tile { id: self.id, trees: flip_and_rotate(&self.trees, 0, true) },
-            Tile { id: self.id, trees: flip_and_rotate(&self.trees, 1, true) },
-            Tile { id: self.id, trees: flip_and_rotate(&self.trees, 2, true) },
-            Tile { id: self.id, trees: flip_and_rotate(&self.trees, 3, true) },
-            Tile { id: self.id, trees: flip_and_rotate(&self.trees, 0, false) },
-            Tile { id: self.id, trees: flip_and_rotate(&self.trees, 1, false) },
-            Tile { id: self.id, trees: flip_and_rotate(&self.trees, 2, false) },
-            Tile { id: self.id, trees: flip_and_rotate(&self.trees, 3, false) },
+            Tile {
+                id: self.id,
+                trees: flip_and_rotate(&self.trees, true, true, true),
+            },
+            Tile {
+                id: self.id,
+                trees: flip_and_rotate(&self.trees, true, true, false),
+            },
+            Tile {
+                id: self.id,
+                trees: flip_and_rotate(&self.trees, true, false, true),
+            },
+            Tile {
+                id: self.id,
+                trees: flip_and_rotate(&self.trees, true, false, false),
+            },
+            Tile {
+                id: self.id,
+                trees: flip_and_rotate(&self.trees, false, true, true),
+            },
+            Tile {
+                id: self.id,
+                trees: flip_and_rotate(&self.trees, false, true, false),
+            },
+            Tile {
+                id: self.id,
+                trees: flip_and_rotate(&self.trees, false, false, true),
+            },
+            Tile {
+                id: self.id,
+                trees: flip_and_rotate(&self.trees, false, false, false),
+            },
         ];
     }
 
@@ -144,37 +168,33 @@ fn total_neighbours(tile: &Tile, others: &HashSet<Tile>) -> isize {
     return others.iter().filter(|&o| tile.neighbours(o)).count() as isize;
 }
 
-fn flip_and_rotate(original: &HashSet<Tree>, ticks: isize, flip: bool) -> HashSet<Tree> {
+fn flip_and_rotate(
+    original: &HashSet<Tree>,
+    rotate: bool,
+    flip_x: bool,
+    flip_y: bool,
+) -> HashSet<Tree> {
     let mut new = HashSet::new();
+
+    let max_x = original.iter().map(|t| t.x).max().unwrap();
+    let max_y = original.iter().map(|t| t.x).max().unwrap();
 
     for tree in original {
         let mut x: isize = tree.x;
         let mut y: isize = tree.y;
 
-        if flip {
-            let old_x = x;
-            x = y;
-            y = old_x;
+        if flip_x {
+            x = max_x - x;
         }
 
-        // Rotate!
-        match ticks {
-            0 => {}
-            1 => {
-                let old_x = x;
-                x = y;
-                y = -1 * old_x;
-            }
-            2 => {
-                x = -x;
-                y = -y;
-            }
-            3 => {
-                let old_x = x;
-                x = -1 * y;
-                y = old_x;
-            }
-            _ => panic!("Invalid rotation!"),
+        if flip_y {
+            y = max_y - y;
+        }
+
+        if rotate {
+            let old_x = x;
+            x = y;
+            y = max_x - old_x;
         }
 
         new.insert(Tree { x, y });
@@ -190,11 +210,13 @@ fn create_composite(tiles: &HashSet<Tile>) -> HashSet<Tree> {
 
     // Insert a starting piece.
     placed.insert((0, 0), tiles.iter().next().unwrap().clone());
+    unplaced.remove(placed.values().next().unwrap());
 
     loop {
+        println!("{} tiles unplaced", unplaced.len());
         for t in unplaced.clone() {
             for (k, v) in placed.clone().iter() {
-                for candidate in t.get_all_rotation() {
+                for candidate in t.get_all_rotations() {
                     for border in vec![
                         Border::Down(),
                         Border::Up(),
@@ -226,8 +248,12 @@ fn create_composite(tiles: &HashSet<Tile>) -> HashSet<Tree> {
 
                             placed.insert((k.0 + dx, k.1 + dy), candidate.clone());
                             unplaced.remove(&t);
+                            break;
                         }
                     }
+                }
+                if v.neighbours(&t) && unplaced.contains(&t) {
+                    panic!("This should have been a match...");
                 }
             }
         }
@@ -284,14 +310,14 @@ fn count_seamonsters(composite: &HashSet<Tree>) -> usize {
             let monster = get_seamonster_hashset(dx, dy);
 
             // Add all rotations and flips.
-            monsters.push(flip_and_rotate(&monster, 0, true));
-            monsters.push(flip_and_rotate(&monster, 1, true));
-            monsters.push(flip_and_rotate(&monster, 2, true));
-            monsters.push(flip_and_rotate(&monster, 3, true));
-            monsters.push(flip_and_rotate(&monster, 0, false));
-            monsters.push(flip_and_rotate(&monster, 1, false));
-            monsters.push(flip_and_rotate(&monster, 2, false));
-            monsters.push(flip_and_rotate(&monster, 3, false));
+            monsters.push(flip_and_rotate(&monster, true, true, true));
+            monsters.push(flip_and_rotate(&monster, true, false, true));
+            monsters.push(flip_and_rotate(&monster, true, true, false));
+            monsters.push(flip_and_rotate(&monster, true, false, false));
+            monsters.push(flip_and_rotate(&monster, false, true, true));
+            monsters.push(flip_and_rotate(&monster, false, false, true));
+            monsters.push(flip_and_rotate(&monster, false, true, false));
+            monsters.push(flip_and_rotate(&monster, false, false, false));
         }
     }
 
@@ -309,9 +335,11 @@ fn count_seamonsters(composite: &HashSet<Tree>) -> usize {
 fn part_b(tiles: &HashSet<Tile>) -> usize {
     // Get the composite image from the tiles.
     let composite = create_composite(tiles);
+    println!("There are {} waves/monster bits", composite.len());
 
     // Count the number of monsters in the composite image.
     let monster_count = count_seamonsters(&composite);
+    println!("Found {} monsters", monster_count);
 
     // Subtract this number of monsters from the length of the composite image.
     return composite.len() - (monster_count * get_seamonster_hashset(0, 0).len());
