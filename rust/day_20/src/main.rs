@@ -305,8 +305,8 @@ fn get_seamonster_hashset(dx: isize, dy: isize) -> HashSet<Tree> {
 fn count_seamonsters(composite: &HashSet<Tree>) -> usize {
     // Get all monsters we could reasonably have.
     let mut monsters: Vec<HashSet<Tree>> = Vec::new();
-    for dx in -90..90 {
-        for dy in -90..90 {
+    for dx in -300..300 {
+        for dy in -300..300 {
             let monster = get_seamonster_hashset(dx, dy);
 
             // Add all rotations and flips.
