@@ -1,259 +1,295 @@
 use aoc::parse_blocks;
 use std::collections::{HashMap, HashSet};
-use std::hash::{Hash, Hasher};
+use std::str::FromStr;
 
-const PIXELS: isize = 10;
-const TREE: char = '#';
+const PIXEL: char = '#';
 
 #[derive(Clone, Copy, Debug)]
-enum Border {
+enum Direction {
     Up(),
     Down(),
     Left(),
     Right(),
 }
 
-// I thought that the pictures were of trees in part A, so henceforth these will be tree monsters.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-struct Tree {
+struct Pixel {
     x: isize,
     y: isize,
 }
 
 #[derive(Clone, Debug, Eq)]
-struct Tile {
-    id: isize,
-    trees: HashSet<Tree>,
+struct Picture {
+    id: Option<usize>,
+    pixels: HashSet<Pixel>,
 }
 
-impl Hash for Tile {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.id.hash(state);
-    }
-}
-
-impl PartialEq for Tile {
+impl PartialEq for Picture {
     fn eq(&self, other: &Self) -> bool {
         self.id == other.id
     }
 }
 
-impl Tile {
-    fn fits(&self, other: &Tile, border: Border) -> bool {
-        return match border {
-            Border::Down() => self.get_borders()[2] == other.get_borders()[3],
-            Border::Up() => self.get_borders()[3] == other.get_borders()[2],
-            Border::Left() => self.get_borders()[0] == other.get_borders()[1],
-            Border::Right() => self.get_borders()[1] == other.get_borders()[0],
+impl Picture {
+    fn get_min_x(&self) -> isize {
+        return self.pixels.iter().map(|t| t.x).min().unwrap();
+    }
+
+    fn get_min_y(&self) -> isize {
+        return self.pixels.iter().map(|t| t.y).min().unwrap();
+    }
+
+    fn get_max_x(&self) -> isize {
+        return self.pixels.iter().map(|t| t.x).max().unwrap();
+    }
+
+    fn get_max_y(&self) -> isize {
+        return self.pixels.iter().map(|t| t.y).max().unwrap();
+    }
+
+    fn flip_x(&self) -> Picture {
+        let max_x = self.get_max_x();
+        return Picture {
+            id: self.id,
+            pixels: self
+                .pixels
+                .iter()
+                .map(|p| Pixel {
+                    x: max_x - p.x,
+                    y: p.y,
+                })
+                .collect(),
         };
     }
 
-    fn flip_border(border: &HashSet<isize>) -> HashSet<isize> {
-        return border.iter().map(|v| PIXELS - 1 - *v).collect();
+    fn flip_y(&self) -> Picture {
+        let max_y = self.get_max_y();
+        return Picture {
+            id: self.id,
+            pixels: self
+                .pixels
+                .iter()
+                .map(|p| Pixel {
+                    x: p.x,
+                    y: max_y - p.y,
+                })
+                .collect(),
+        };
     }
 
-    fn get_all_rotations(&self) -> Vec<Tile> {
-        return vec![
-            Tile {
-                id: self.id,
-                trees: flip_and_rotate(&self.trees, true, true, true),
-            },
-            Tile {
-                id: self.id,
-                trees: flip_and_rotate(&self.trees, true, true, false),
-            },
-            Tile {
-                id: self.id,
-                trees: flip_and_rotate(&self.trees, true, false, true),
-            },
-            Tile {
-                id: self.id,
-                trees: flip_and_rotate(&self.trees, true, false, false),
-            },
-            Tile {
-                id: self.id,
-                trees: flip_and_rotate(&self.trees, false, true, true),
-            },
-            Tile {
-                id: self.id,
-                trees: flip_and_rotate(&self.trees, false, true, false),
-            },
-            Tile {
-                id: self.id,
-                trees: flip_and_rotate(&self.trees, false, false, true),
-            },
-            Tile {
-                id: self.id,
-                trees: flip_and_rotate(&self.trees, false, false, false),
-            },
-        ];
+    fn rotate(&self) -> Picture {
+        let max_x = self.get_max_x();
+        return Picture {
+            id: self.id,
+            pixels: self
+                .pixels
+                .iter()
+                .map(|p| Pixel {
+                    x: p.y,
+                    y: max_x - p.x,
+                })
+                .collect(),
+        };
     }
 
-    fn get_borders(&self) -> Vec<HashSet<isize>> {
-        return vec![
-            self.trees
-                .iter()
-                .filter(|&t| t.x == 0)
-                .map(|t| t.y)
-                .collect(),
-            self.trees
-                .iter()
-                .filter(|&t| t.x == (PIXELS - 1))
-                .map(|t| t.y)
-                .collect(),
-            self.trees
+    fn get_border(&self, direction: Direction) -> HashSet<isize> {
+        let max_x = self.get_max_x();
+        let max_y = self.get_max_y();
+
+        match direction {
+            Direction::Up() => self
+                .pixels
                 .iter()
                 .filter(|&t| t.y == 0)
                 .map(|t| t.x)
                 .collect(),
-            self.trees
+            Direction::Down() => self
+                .pixels
                 .iter()
-                .filter(|&t| t.y == (PIXELS - 1))
+                .filter(|&t| t.y == max_y)
                 .map(|t| t.x)
                 .collect(),
-        ];
+            Direction::Left() => self
+                .pixels
+                .iter()
+                .filter(|&t| t.x == 0)
+                .map(|t| t.y)
+                .collect(),
+            Direction::Right() => self
+                .pixels
+                .iter()
+                .filter(|&t| t.x == max_x)
+                .map(|t| t.y)
+                .collect(),
+        }
     }
 
-    fn neighbours(&self, other: &Tile) -> bool {
-        // Self is not a neighbor.
-        if self == other {
-            return false;
-        }
+    fn get_permutations(&self) -> Vec<Picture> {
+        vec![
+            self.clone(),
+            self.flip_x(),
+            self.flip_y(),
+            self.rotate(),
+            self.flip_x().flip_y(),
+            self.flip_x().rotate(),
+            self.flip_y().rotate(),
+            self.flip_x().flip_y().rotate(),
+        ]
+    }
 
-        for sb in self.get_borders() {
-            for ob in other.get_borders() {
-                if (sb == ob) || (sb == Tile::flip_border(&ob)) {
-                    return true;
-                }
+    fn is_neighbour(&self, other: &Picture, direction: Direction) -> bool {
+        match direction {
+            Direction::Up() => {
+                self.get_border(Direction::Up()) == other.get_border(Direction::Down())
+            }
+            Direction::Down() => {
+                self.get_border(Direction::Down()) == other.get_border(Direction::Up())
+            }
+            Direction::Left() => {
+                self.get_border(Direction::Left()) == other.get_border(Direction::Right())
+            }
+            Direction::Right() => {
+                self.get_border(Direction::Right()) == other.get_border(Direction::Left())
             }
         }
+    }
 
-        return false;
+    fn to_string(&self) -> String {
+        let mut string = "".to_string();
+        for y in self.get_min_y()..=self.get_max_y() {
+            for x in self.get_min_x()..=self.get_max_x() {
+                if self.pixels.contains(&Pixel { x, y }) {
+                    string += &"#";
+                } else {
+                    string += &".";
+                }
+            }
+            string += &"\n";
+        }
+        return string;
     }
 }
 
-fn parse_inputs() -> HashSet<Tile> {
-    let mut tiles = HashSet::new();
+impl FromStr for Picture {
+    type Err = ();
 
-    for block in parse_blocks() {
-        let mut block_iter = block.iter();
-        let id: isize = match block_iter
+    fn from_str(input: &str) -> Result<Picture, Self::Err> {
+        let input_string = input.to_string();
+        let mut input_iter = input_string.split("\n");
+
+        // Parse the identifier.
+        let id: usize;
+        match input_iter
             .next()
             .unwrap()
             .replace("Tile ", "")
             .replace(":", "")
             .parse()
         {
-            Ok(i) => i,
-            Err(_) => continue,
+            Ok(i) => id = i,
+            Err(_) => return Err(()),
         };
 
-        let mut trees = HashSet::new();
-        for (x, line) in block_iter.enumerate() {
+        // Parse the pixels.
+        let mut pixels = HashSet::new();
+        for (x, line) in input_iter.enumerate() {
             for (y, chr) in line.chars().enumerate() {
-                if chr == TREE {
-                    trees.insert(Tree {
+                if chr == PIXEL {
+                    pixels.insert(Pixel {
                         x: x as isize,
                         y: y as isize,
                     });
                 }
             }
         }
-        tiles.insert(Tile { id, trees });
+
+        return Ok(Picture {
+            id: Some(id),
+            pixels,
+        });
     }
-    return tiles;
 }
 
-fn total_neighbours(tile: &Tile, others: &HashSet<Tile>) -> isize {
-    return others.iter().filter(|&o| tile.neighbours(o)).count() as isize;
-}
-
-fn flip_and_rotate(
-    original: &HashSet<Tree>,
-    rotate: bool,
-    flip_x: bool,
-    flip_y: bool,
-) -> HashSet<Tree> {
-    let mut new = HashSet::new();
-
-    let max_x = original.iter().map(|t| t.x).max().unwrap();
-    let max_y = original.iter().map(|t| t.x).max().unwrap();
-
-    for tree in original {
-        let mut x: isize = tree.x;
-        let mut y: isize = tree.y;
-
-        if flip_x {
-            x = max_x - x;
+fn count_neighbours(tile: &Picture, others: &Vec<Picture>) -> usize {
+    let mut count = 0;
+    for other in others {
+        if other.id == tile.id {
+            continue;
         }
 
-        if flip_y {
-            y = max_y - y;
+        let mut found = false;
+        for permutation in other.get_permutations() {
+            for direction in vec![
+                Direction::Down(),
+                Direction::Up(),
+                Direction::Right(),
+                Direction::Left(),
+            ] {
+                if tile.is_neighbour(&permutation, direction) && !found {
+                    count += 1;
+                    found = true;
+                }
+            }
         }
-
-        if rotate {
-            let old_x = x;
-            x = y;
-            y = max_x - old_x;
-        }
-
-        new.insert(Tree { x, y });
     }
-
-    return new;
+    return count;
 }
 
-fn create_composite(tiles: &HashSet<Tile>) -> HashSet<Tree> {
+fn part_a(tiles: &Vec<Picture>) -> usize {
+    return tiles
+        .iter()
+        .filter(|&t| count_neighbours(t, tiles) == 2)
+        .map(|t| t.id.unwrap())
+        .product();
+}
+
+fn create_composite(tiles: &Vec<Picture>) -> Picture {
     // Keep the placed tiles in a hashmap.
-    let mut placed: HashMap<(isize, isize), Tile> = HashMap::new();
+    let mut placed: HashMap<(isize, isize), Picture> = HashMap::new();
     let mut unplaced = tiles.clone();
 
     // Insert a starting piece.
     placed.insert((0, 0), tiles.iter().next().unwrap().clone());
-    unplaced.remove(placed.values().next().unwrap());
+    unplaced.retain(|x| x != placed.values().next().unwrap());
 
     loop {
-        println!("{} tiles unplaced", unplaced.len());
         for t in unplaced.clone() {
             for (k, v) in placed.clone().iter() {
-                for candidate in t.get_all_rotations() {
+                for candidate in t.get_permutations() {
                     for border in vec![
-                        Border::Down(),
-                        Border::Up(),
-                        Border::Right(),
-                        Border::Left(),
+                        Direction::Down(),
+                        Direction::Up(),
+                        Direction::Right(),
+                        Direction::Left(),
                     ] {
-                        if v.fits(&candidate, border) {
+                        if v.is_neighbour(&candidate, border) {
                             let dx;
                             let dy;
 
                             match border {
-                                Border::Down() => {
+                                Direction::Down() => {
                                     dx = 0;
                                     dy = -1;
                                 }
-                                Border::Up() => {
+                                Direction::Up() => {
                                     dx = 0;
                                     dy = 1;
                                 }
-                                Border::Left() => {
+                                Direction::Left() => {
                                     dx = -1;
                                     dy = 0;
                                 }
-                                Border::Right() => {
+                                Direction::Right() => {
                                     dx = 1;
                                     dy = 0;
                                 }
                             }
 
                             placed.insert((k.0 + dx, k.1 + dy), candidate.clone());
-                            unplaced.remove(&t);
+                            unplaced.retain(|x| x != &t);
                             break;
                         }
                     }
-                }
-                if v.neighbours(&t) && unplaced.contains(&t) {
-                    panic!("This should have been a match...");
                 }
             }
         }
@@ -264,23 +300,28 @@ fn create_composite(tiles: &HashSet<Tile>) -> HashSet<Tree> {
     }
 
     // Add each tiles to the composite respecting the x and y offset.
-    let mut composite: HashSet<Tree> = HashSet::new();
+    let mut composite: HashSet<Pixel> = HashSet::new();
 
     for (k, v) in placed.iter() {
-        for t in v.trees.clone() {
-            if (t.x != 0) && (t.y != 0) && (t.x != PIXELS - 1) && (t.y != PIXELS - 1) {
-                composite.insert(Tree {
-                    x: (k.0 * (PIXELS - 2)) + t.x,
-                    y: (k.1 * (PIXELS - 2)) + t.y,
+        let max_x = v.get_max_x();
+        let max_y = v.get_max_y();
+        for t in v.pixels.clone() {
+            if (t.x != 0) && (t.y != 0) && (t.x != max_x) && (t.y != max_y) {
+                composite.insert(Pixel {
+                    x: (k.0 * (max_x - 1)) + t.x,
+                    y: (k.1 * (max_y - 1)) + t.y,
                 });
             }
         }
     }
 
-    return composite;
+    return Picture {
+        id: None,
+        pixels: composite,
+    };
 }
 
-fn get_seamonster_hashset(dx: isize, dy: isize) -> HashSet<Tree> {
+fn get_seamonster(dx: isize, dy: isize) -> HashSet<Pixel> {
     let mut monster = HashSet::new();
     let monster_strings = vec![
         "                  # ".to_string(),
@@ -288,12 +329,12 @@ fn get_seamonster_hashset(dx: isize, dy: isize) -> HashSet<Tree> {
         " #  #  #  #  #  #   ".to_string(),
     ];
 
-    for (x, line) in monster_strings.iter().enumerate() {
-        for (y, chr) in line.chars().enumerate() {
-            if chr == TREE {
-                monster.insert(Tree {
+    for (y, line) in monster_strings.iter().enumerate() {
+        for (x, chr) in line.chars().enumerate() {
+            if chr == PIXEL {
+                monster.insert(Pixel {
                     x: x as isize + dx,
-                    y: y as isize + dy,
+                    y: y as isize + dy - 1,
                 });
             }
         }
@@ -302,59 +343,46 @@ fn get_seamonster_hashset(dx: isize, dy: isize) -> HashSet<Tree> {
     return monster;
 }
 
-fn count_seamonsters(composite: &HashSet<Tree>) -> usize {
-    // Get all monsters we could reasonably have.
-    let mut monsters: Vec<HashSet<Tree>> = Vec::new();
-    for dx in -300..300 {
-        for dy in -300..300 {
-            let monster = get_seamonster_hashset(dx, dy);
-
-            // Add all rotations and flips.
-            monsters.push(flip_and_rotate(&monster, true, true, true));
-            monsters.push(flip_and_rotate(&monster, true, false, true));
-            monsters.push(flip_and_rotate(&monster, true, true, false));
-            monsters.push(flip_and_rotate(&monster, true, false, false));
-            monsters.push(flip_and_rotate(&monster, false, true, true));
-            monsters.push(flip_and_rotate(&monster, false, false, true));
-            monsters.push(flip_and_rotate(&monster, false, true, false));
-            monsters.push(flip_and_rotate(&monster, false, false, false));
-        }
-    }
-
-    // For each starting position, check if there is a seamonster using the subset function.
+fn count_seamonsters(composite: &Picture) -> usize {
     let mut counter = 0;
-    for monster in monsters {
-        if monster.is_subset(composite) {
-            counter += 1;
+    for permutation in composite.get_permutations() {
+        let mut found = false;
+        for pixel in &permutation.pixels {
+            let monster: HashSet<Pixel> = get_seamonster(pixel.x, pixel.y);
+
+            if monster.is_subset(&permutation.pixels) {
+                counter += 1;
+                found = true;
+            }
+        }
+
+        if found {
+            println!("Found some in this orientation:\n\n{}", &permutation.to_string());
         }
     }
-
     return counter;
 }
 
-fn part_b(tiles: &HashSet<Tile>) -> usize {
+fn part_b(tiles: &Vec<Picture>) -> usize {
     // Get the composite image from the tiles.
     let composite = create_composite(tiles);
-    println!("There are {} waves/monster bits", composite.len());
+    println!("There are {} waves/monster bits", composite.pixels.len());
 
     // Count the number of monsters in the composite image.
     let monster_count = count_seamonsters(&composite);
     println!("Found {} monsters", monster_count);
 
     // Subtract this number of monsters from the length of the composite image.
-    return composite.len() - (monster_count * get_seamonster_hashset(0, 0).len());
-}
-
-fn part_a(tiles: &HashSet<Tile>) -> isize {
-    return tiles
-        .iter()
-        .filter(|&t| total_neighbours(t, tiles) == 2)
-        .map(|t| t.id)
-        .product();
+    return composite.pixels.len() - (monster_count * get_seamonster(0, 0).len());
 }
 
 fn main() {
-    let inputs = parse_inputs();
+    let inputs: Vec<Picture> = parse_blocks()
+        .iter()
+        .map(|s| Picture::from_str(s))
+        .filter(|o| match o { Ok(_) => true, Err(_) => false })
+        .map(|o| o.unwrap())
+        .collect();
     println!("Loaded {} tiles", inputs.len());
     println!("A: {}", part_a(&inputs));
     println!("B: {}", part_b(&inputs));

@@ -32,9 +32,7 @@ pub fn parse_lines() -> Vec<String> {
     return vec;
 }
 
-pub fn parse_blocks() -> Vec<Vec<String>> {
-    let mut vec = Vec::new();
-
+pub fn parse_blocks() -> Vec<String> {
     // Get the stdin and read it into a buffer.
     let mut buffer = String::new();
     let mut stdin = io::stdin();
@@ -43,13 +41,5 @@ pub fn parse_blocks() -> Vec<Vec<String>> {
         Err(_) => panic!("Could not read from stdin"),
     };
 
-    for block in buffer.split("\n\n") {
-        let mut block_vec: Vec<String> = Vec::new();
-        for line in block.split("\n") {
-            block_vec.push(line.to_string());
-        }
-        vec.push(block_vec);
-    }
-
-    return vec;
+    return buffer.split("\n\n").map(|s| s.to_string()).collect();
 }
