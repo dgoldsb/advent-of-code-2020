@@ -192,8 +192,8 @@ impl FromStr for Picture {
 
         // Parse the pixels.
         let mut pixels = HashSet::new();
-        for (x, line) in input_iter.enumerate() {
-            for (y, chr) in line.chars().enumerate() {
+        for (y, line) in input_iter.enumerate() {
+            for (x, chr) in line.chars().enumerate() {
                 if chr == PIXEL {
                     pixels.insert(Pixel {
                         x: x as isize,
@@ -269,18 +269,18 @@ fn create_composite(tiles: &Vec<Picture>) -> Picture {
                             match border {
                                 Direction::Down() => {
                                     dx = 0;
-                                    dy = -1;
+                                    dy = 1;
                                 }
                                 Direction::Up() => {
                                     dx = 0;
-                                    dy = 1;
+                                    dy = -1;
                                 }
                                 Direction::Left() => {
-                                    dx = -1;
+                                    dx = 1;
                                     dy = 0;
                                 }
                                 Direction::Right() => {
-                                    dx = 1;
+                                    dx = -1;
                                     dy = 0;
                                 }
                             }
@@ -321,7 +321,7 @@ fn create_composite(tiles: &Vec<Picture>) -> Picture {
     };
 }
 
-fn get_seamonster(dx: isize, dy: isize) -> HashSet<Pixel> {
+fn get_seamonster(dx: isize, dy: isize) -> Picture {
     let mut monster = HashSet::new();
     let monster_strings = vec![
         "                  # ".to_string(),
@@ -340,7 +340,7 @@ fn get_seamonster(dx: isize, dy: isize) -> HashSet<Pixel> {
         }
     }
 
-    return monster;
+    return Picture { id: None, pixels: monster };
 }
 
 fn count_seamonsters(composite: &Picture) -> usize {
@@ -348,16 +348,19 @@ fn count_seamonsters(composite: &Picture) -> usize {
     for permutation in composite.get_permutations() {
         let mut found = false;
         for pixel in &permutation.pixels {
-            let monster: HashSet<Pixel> = get_seamonster(pixel.x, pixel.y);
+            let monster = get_seamonster(pixel.x, pixel.y);
 
-            if monster.is_subset(&permutation.pixels) {
+            if monster.pixels.is_subset(&permutation.pixels) {
                 counter += 1;
                 found = true;
             }
         }
 
         if found {
-            println!("Found some in this orientation:\n\n{}", &permutation.to_string());
+            println!(
+                "Found some in this orientation:\n\n{}",
+                &permutation.to_string()
+            );
         }
     }
     return counter;
@@ -373,14 +376,17 @@ fn part_b(tiles: &Vec<Picture>) -> usize {
     println!("Found {} monsters", monster_count);
 
     // Subtract this number of monsters from the length of the composite image.
-    return composite.pixels.len() - (monster_count * get_seamonster(0, 0).len());
+    return composite.pixels.len() - (monster_count * get_seamonster(0, 0).pixels.len());
 }
 
 fn main() {
     let inputs: Vec<Picture> = parse_blocks()
         .iter()
         .map(|s| Picture::from_str(s))
-        .filter(|o| match o { Ok(_) => true, Err(_) => false })
+        .filter(|o| match o {
+            Ok(_) => true,
+            Err(_) => false,
+        })
         .map(|o| o.unwrap())
         .collect();
     println!("Loaded {} tiles", inputs.len());
