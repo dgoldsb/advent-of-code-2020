@@ -1,6 +1,7 @@
 use aoc::parse_lines;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
+use std::iter::FromIterator;
 use std::str::FromStr;
 
 #[derive(Clone, Debug)]
@@ -81,7 +82,6 @@ fn part_a(recipes: &Vec<Recipe>) -> usize {
 
     // Get a map of {allergen: ingredient}.
     let allergens: HashMap<String, String> = map_allergens(recipes);
-    println!("{:?}", allergens);
 
     // Filter the ingredients that have zero.
     let unsafe_ingredients: HashSet<String> = allergens.values().map(|s| s.clone()).collect();
@@ -89,7 +89,6 @@ fn part_a(recipes: &Vec<Recipe>) -> usize {
         .difference(&unsafe_ingredients)
         .map(|s| s.clone())
         .collect();
-    println!("{:?}", safe_ingredients);
 
     // Count how often these ingredients occur.
     return recipes
@@ -104,6 +103,17 @@ fn part_a(recipes: &Vec<Recipe>) -> usize {
         .sum();
 }
 
+fn part_b(recipes: &Vec<Recipe>) -> String {
+    let allergens_map = map_allergens(recipes);
+    let mut unsafe_ingredients: Vec<(&String, &String)> = Vec::from_iter(allergens_map.iter());
+    unsafe_ingredients.sort();
+    return unsafe_ingredients
+        .iter()
+        .map(|&t| t.1.clone())
+        .collect::<Vec<String>>()
+        .join(",");
+}
+
 fn main() {
     let inputs: Vec<Recipe> = parse_lines()
         .iter()
@@ -112,5 +122,5 @@ fn main() {
     println!("Loaded {} recipes", inputs.len());
 
     println!("A: {}", part_a(&inputs));
-    //println!("B: {}", part_b(&inputs));
+    println!("B: {}", part_b(&inputs));
 }
