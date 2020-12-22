@@ -154,12 +154,26 @@ impl Picture {
         }
     }
 
-    fn to_string(&self) -> String {
+    fn to_string(&self, monsters: &Vec<Picture>) -> String {
         let mut string = "".to_string();
         for y in self.get_min_y()..=self.get_max_y() {
             for x in self.get_min_x()..=self.get_max_x() {
                 if self.pixels.contains(&Pixel { x, y }) {
-                    string += &"#";
+                    let mut is_monster = false;
+
+                    for monster in monsters {
+                        if monster.pixels.contains(&Pixel { x, y }) {
+                            is_monster = true;
+                        }
+                    }
+
+                    if is_monster {
+                        string += &"0";
+                    }
+                    else {
+                        string += &"#";
+                    }
+
                 } else {
                     string += &".";
                 }
@@ -344,14 +358,14 @@ fn get_seamonster(dx: isize, dy: isize) -> Picture {
 }
 
 fn count_seamonsters(composite: &Picture) -> usize {
-    let mut counter = 0;
+    let mut monsters = Vec::new();
     for permutation in composite.get_permutations() {
         let mut found = false;
         for pixel in &permutation.pixels {
             let monster = get_seamonster(pixel.x, pixel.y);
 
             if monster.pixels.is_subset(&permutation.pixels) {
-                counter += 1;
+                monsters.push(monster);
                 found = true;
             }
         }
@@ -359,11 +373,11 @@ fn count_seamonsters(composite: &Picture) -> usize {
         if found {
             println!(
                 "Found some in this orientation:\n\n{}",
-                &permutation.to_string()
+                &permutation.to_string(&monsters)
             );
         }
     }
-    return counter;
+    return monsters.len();
 }
 
 fn part_b(tiles: &Vec<Picture>) -> usize {
