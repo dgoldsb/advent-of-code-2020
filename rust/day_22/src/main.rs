@@ -1,13 +1,7 @@
 use aoc::parse_blocks;
-use lazy_static::lazy_static;
 use queue::Queue;
 use std::collections::HashSet;
 use std::str::FromStr;
-use std::sync::Mutex;
-
-lazy_static! {
-    static ref MEMORY: Mutex<HashSet<String>> = Mutex::new(HashSet::new());
-}
 
 #[derive(Clone, Debug)]
 struct Deck {
@@ -88,35 +82,25 @@ fn stringify_state(deck_a: &Deck, deck_b: &Deck) -> String {
     return state;
 }
 
-fn play_recursive_game(deck_a: &Deck, deck_b: &Deck) -> Result<Deck, Deck> {
+fn play_recursive_game(deck_a: &Deck, deck_b: &Deck) -> Deck {
     let mut a = deck_a.clone();
     let mut b = deck_b.clone();
+    let mut h = HashSet::new();
 
     loop {
         // Check for instant player 1 win if we are in a loop.
         let state = stringify_state(&a, &b);
-        match MEMORY.lock() {
-            Ok(mut m) => {
-                if m.contains(&state) {
-                    println!("Found state {} before!", &state);
-                    return Err(a);
-                }
-                m.insert(state);
-            }
-            Err(_) => panic!("Could not lock memory..."),
+        if h.contains(&state) {
+            return a.clone();
         }
+        h.insert(state);
 
         let card_a = a.cards.dequeue().unwrap();
         let card_b = b.cards.dequeue().unwrap();
 
         let winner: String;
         if (card_a <= a.cards.len()) && (card_b <= b.cards.len()) {
-            match play_recursive_game(&a, &b) {
-                Ok(d) => winner = d.player,
-                Err(d) => {
-                    return Err(d);
-                },
-            }
+            winner = play_recursive_game(&a, &b).player
         } else {
             if card_a > card_b {
                 winner = a.player.clone();
@@ -134,11 +118,11 @@ fn play_recursive_game(deck_a: &Deck, deck_b: &Deck) -> Result<Deck, Deck> {
         }
 
         if a.cards.is_empty() {
-            return Ok(b);
+            return b.clone();
         }
 
         if b.cards.is_empty() {
-            return Ok(a);
+            return a.clone();
         }
     }
 }
@@ -148,10 +132,7 @@ fn solve(deck_a: &Deck, deck_b: &Deck, part_a: &bool) -> usize {
     if *part_a {
         winner = play_game(deck_a, deck_b);
     } else {
-        winner = match play_recursive_game(deck_a, deck_b) {
-            Ok(d) => d,
-            Err(d) => d,
-        };
+        winner = play_recursive_game(deck_a, deck_b);
     }
 
     let mut counter = 0;
@@ -169,13 +150,16 @@ fn main() {
         .collect();
 
     println!(
-        "B: {}",
-        solve(&inputs.get(0).unwrap(), &inputs.get(1).unwrap(), &false)
-    );
-    println!(
         "A: {}",
         solve(&inputs.get(0).unwrap(), &inputs.get(1).unwrap(), &true)
+    );
+    println!(
+        "B: {}",
+        solve(&inputs.get(0).unwrap(), &inputs.get(1).unwrap(), &false)
     );
 }
 
 // 7248 is too low!
+// 20893 is too low, which includes cards added back to the winner
+// 10095 is too low by looking at the rest, which ignores the returned deck and just gives the winner the cards in play
+// 8120 after reread, obviously also too low
