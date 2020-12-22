@@ -1,6 +1,13 @@
 use aoc::parse_blocks;
+use lazy_static::lazy_static;
 use queue::Queue;
+use std::collections::HashSet;
 use std::str::FromStr;
+use std::sync::Mutex;
+
+lazy_static! {
+    static ref MEMORY: Mutex<HashSet<String>> = Mutex::new(HashSet::new());
+}
 
 #[derive(Clone, Debug)]
 struct Deck {
@@ -59,16 +66,98 @@ fn play_game(deck_a: &Deck, deck_b: &Deck) -> Deck {
     }
 }
 
-fn part_a(deck_a: &Deck, deck_b: &Deck) -> usize {
-    let mut winner: Deck = play_game(deck_a, deck_b);
-    let mut counter = 0;
-    loop {
-        let multiplier = winner.cards.len();
-        counter += winner.cards.dequeue().unwrap() * multiplier;
+fn stringify_state(deck_a: &Deck, deck_b: &Deck) -> String {
+    let mut state = "".to_string();
 
-        if winner.cards.is_empty() {
-            break;
+    state += &deck_a.player;
+
+    let mut cards = deck_a.cards.clone();
+    while let Some(card) = cards.dequeue() {
+        state += ",";
+        state += &card.to_string();
+    }
+
+    state += &deck_b.player;
+
+    let mut cards = deck_b.cards.clone();
+    while let Some(card) = cards.dequeue() {
+        state += ",";
+        state += &card.to_string();
+    }
+
+    return state;
+}
+
+fn play_recursive_game(deck_a: &Deck, deck_b: &Deck) -> Result<Deck, Deck> {
+    let mut a = deck_a.clone();
+    let mut b = deck_b.clone();
+
+    loop {
+        // Check for instant player 1 win if we are in a loop.
+        let state = stringify_state(&a, &b);
+        match MEMORY.lock() {
+            Ok(mut m) => {
+                if m.contains(&state) {
+                    println!("Found state {} before!", &state);
+                    return Err(a);
+                }
+                m.insert(state);
+            }
+            Err(_) => panic!("Could not lock memory..."),
         }
+
+        let card_a = a.cards.dequeue().unwrap();
+        let card_b = b.cards.dequeue().unwrap();
+
+        let winner: String;
+        if (card_a <= a.cards.len()) && (card_b <= b.cards.len()) {
+            match play_recursive_game(&a, &b) {
+                Ok(d) => winner = d.player,
+                Err(d) => {
+                    return Err(d);
+                },
+            }
+        } else {
+            if card_a > card_b {
+                winner = a.player.clone();
+            } else {
+                winner = b.player.clone();
+            }
+        }
+
+        if winner == a.player {
+            a.cards.queue(card_a).unwrap();
+            a.cards.queue(card_b).unwrap();
+        } else if winner == b.player {
+            b.cards.queue(card_b).unwrap();
+            b.cards.queue(card_a).unwrap();
+        }
+
+        if a.cards.is_empty() {
+            return Ok(b);
+        }
+
+        if b.cards.is_empty() {
+            return Ok(a);
+        }
+    }
+}
+
+fn solve(deck_a: &Deck, deck_b: &Deck, part_a: &bool) -> usize {
+    let mut winner: Deck;
+    if *part_a {
+        winner = play_game(deck_a, deck_b);
+    } else {
+        winner = match play_recursive_game(deck_a, deck_b) {
+            Ok(d) => d,
+            Err(d) => d,
+        };
+    }
+
+    let mut counter = 0;
+    while let Some(card) = winner.cards.dequeue() {
+        let multiplier = winner.cards.len() + 1;
+        counter += card * multiplier;
     }
     return counter;
 }
@@ -80,8 +169,13 @@ fn main() {
         .collect();
 
     println!(
-        "A: {}",
-        part_a(&inputs.get(0).unwrap(), &inputs.get(1).unwrap())
+        "B: {}",
+        solve(&inputs.get(0).unwrap(), &inputs.get(1).unwrap(), &false)
     );
-    //println!("B: {}", part_b(&inputs));
+    println!(
+        "A: {}",
+        solve(&inputs.get(0).unwrap(), &inputs.get(1).unwrap(), &true)
+    );
 }
+
+// 7248 is too low!
