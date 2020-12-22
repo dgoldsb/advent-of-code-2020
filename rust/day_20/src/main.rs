@@ -269,18 +269,18 @@ fn create_composite(tiles: &Vec<Picture>) -> Picture {
                             match border {
                                 Direction::Down() => {
                                     dx = 0;
-                                    dy = 1;
+                                    dy = -1;
                                 }
                                 Direction::Up() => {
                                     dx = 0;
-                                    dy = -1;
+                                    dy = 1;
                                 }
                                 Direction::Left() => {
-                                    dx = 1;
+                                    dx = -1;
                                     dy = 0;
                                 }
                                 Direction::Right() => {
-                                    dx = -1;
+                                    dx = 1;
                                     dy = 0;
                                 }
                             }
@@ -356,7 +356,7 @@ fn count_seamonsters(composite: &Picture) -> usize {
             }
         }
 
-        if found {
+        if found || true {
             println!(
                 "Found some in this orientation:\n\n{}",
                 &permutation.to_string()
