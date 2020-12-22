@@ -1,12 +1,11 @@
 use aoc::parse_blocks;
-use queue::Queue;
-use std::collections::HashSet;
+use std::collections::{HashSet, VecDeque};
 use std::str::FromStr;
 
 #[derive(Clone, Debug)]
 struct Deck {
     player: String,
-    cards: Queue<usize>,
+    cards: VecDeque<usize>,
 }
 
 impl FromStr for Deck {
@@ -20,14 +19,14 @@ impl FromStr for Deck {
         let player: String = input_iter.next().unwrap().replace(":", "").to_string();
 
         // Parse the cards.
-        let mut cards: Queue<usize> = Queue::new();
+        let mut cards: VecDeque<usize> = VecDeque::new();
         for c in input_iter {
             let card: usize;
             match c.parse::<usize>() {
                 Ok(u) => card = u,
                 Err(_) => continue,
             }
-            cards.queue(card).unwrap();
+            cards.push_back(card);
         }
 
         return Ok(Deck { player, cards });
@@ -39,15 +38,15 @@ fn play_game(deck_a: &Deck, deck_b: &Deck) -> Deck {
     let mut b = deck_b.clone();
 
     loop {
-        let card_a = a.cards.dequeue().unwrap();
-        let card_b = b.cards.dequeue().unwrap();
+        let card_a = a.cards.pop_front().unwrap();
+        let card_b = b.cards.pop_front().unwrap();
 
         if card_a > card_b {
-            a.cards.queue(card_a).unwrap();
-            a.cards.queue(card_b).unwrap();
+            a.cards.push_back(card_a);
+            a.cards.push_back(card_b);
         } else if card_a < card_b {
-            b.cards.queue(card_b).unwrap();
-            b.cards.queue(card_a).unwrap();
+            b.cards.push_back(card_b);
+            b.cards.push_back(card_a);
         }
 
         if a.cards.is_empty() {
@@ -66,7 +65,7 @@ fn stringify_state(deck_a: &Deck, deck_b: &Deck) -> String {
     state += &deck_a.player;
 
     let mut cards = deck_a.cards.clone();
-    while let Some(card) = cards.dequeue() {
+    while let Some(card) = cards.pop_front() {
         state += ",";
         state += &card.to_string();
     }
@@ -74,7 +73,7 @@ fn stringify_state(deck_a: &Deck, deck_b: &Deck) -> String {
     state += &deck_b.player;
 
     let mut cards = deck_b.cards.clone();
-    while let Some(card) = cards.dequeue() {
+    while let Some(card) = cards.pop_front() {
         state += ",";
         state += &card.to_string();
     }
@@ -95,12 +94,24 @@ fn play_recursive_game(deck_a: &Deck, deck_b: &Deck) -> Deck {
         }
         h.insert(state);
 
-        let card_a = a.cards.dequeue().unwrap();
-        let card_b = b.cards.dequeue().unwrap();
+        // Draw cards.
+        let card_a = a.cards.pop_front().unwrap();
+        let card_b = b.cards.pop_front().unwrap();
 
+        // Determine the winner.
         let winner: String;
         if (card_a <= a.cards.len()) && (card_b <= b.cards.len()) {
-            winner = play_recursive_game(&a, &b).player
+            let mut a_trunc = a.clone();
+            for _ in card_a..a.cards.len() {
+                a_trunc.cards.pop_back();
+            }
+
+            let mut b_trunc = b.clone();
+            for _ in card_b..b.cards.len() {
+                b_trunc.cards.pop_back();
+            }
+
+            winner = play_recursive_game(&a_trunc, &b_trunc).player
         } else {
             if card_a > card_b {
                 winner = a.player.clone();
@@ -109,18 +120,19 @@ fn play_recursive_game(deck_a: &Deck, deck_b: &Deck) -> Deck {
             }
         }
 
+        // Assign cards.
         if winner == a.player {
-            a.cards.queue(card_a).unwrap();
-            a.cards.queue(card_b).unwrap();
-        } else if winner == b.player {
-            b.cards.queue(card_b).unwrap();
-            b.cards.queue(card_a).unwrap();
+            a.cards.push_back(card_a);
+            a.cards.push_back(card_b);
+        } else {
+            b.cards.push_back(card_b);
+            b.cards.push_back(card_a);
         }
 
+        // Check for game end.
         if a.cards.is_empty() {
             return b.clone();
         }
-
         if b.cards.is_empty() {
             return a.clone();
         }
@@ -136,7 +148,7 @@ fn solve(deck_a: &Deck, deck_b: &Deck, part_a: &bool) -> usize {
     }
 
     let mut counter = 0;
-    while let Some(card) = winner.cards.dequeue() {
+    while let Some(card) = winner.cards.pop_front() {
         let multiplier = winner.cards.len() + 1;
         counter += card * multiplier;
     }
@@ -158,8 +170,3 @@ fn main() {
         solve(&inputs.get(0).unwrap(), &inputs.get(1).unwrap(), &false)
     );
 }
-
-// 7248 is too low!
-// 20893 is too low, which includes cards added back to the winner
-// 10095 is too low by looking at the rest, which ignores the returned deck and just gives the winner the cards in play
-// 8120 after reread, obviously also too low
