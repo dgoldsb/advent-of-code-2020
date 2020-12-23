@@ -20,12 +20,11 @@ fn find_cup_index(cups: &VecDeque<usize>, value: &usize) -> usize {
     panic!("Cup not found, could not get index...")
 }
 
-fn play_game(start: &VecDeque<usize>) -> VecDeque<usize> {
+fn play_game(start: &VecDeque<usize>, moves: usize) -> VecDeque<usize> {
     let mut cups = start.clone();
     let max_cup = start.iter().max().unwrap().clone();
 
-    for i in 0..100 {
-        println!("At move {}: {:?}", i, &cups);
+    for _ in 0..moves {
 
         // The crab picks up the three cups that are immediately clockwise of the current cup. They
         // are removed from the circle; cup spacing is adjusted as necessary to maintain the circle.
@@ -35,7 +34,6 @@ fn play_game(start: &VecDeque<usize>) -> VecDeque<usize> {
             cups.pop_front().unwrap(),
             cups.pop_front().unwrap(),
         );
-        println!("Picked up {:?}", picked_up);
 
         // The crab selects a destination cup: the cup with a label equal to the current cup's label
         // minus one. If this would select one of the cups that was just picked up, the crab will
@@ -53,12 +51,10 @@ fn play_game(start: &VecDeque<usize>) -> VecDeque<usize> {
                 _ => destination_cup - 1,
             };
         }
-        println!("Destination cup is {}", destination_cup);
 
         // The crab places the cups it just picked up so that they are immediately clockwise of the
         // destination cup. They keep the same order as when they were picked up.
         let index = find_cup_index(&cups, &destination_cup) + 1;
-        println!("Index of destination cup is {}", index);
         cups.insert(index, picked_up.2);
         cups.insert(index, picked_up.1);
         cups.insert(index, picked_up.0);
@@ -70,7 +66,7 @@ fn play_game(start: &VecDeque<usize>) -> VecDeque<usize> {
     return cups;
 }
 
-fn get_result(mut cups: VecDeque<usize>) -> String {
+fn get_result_a(mut cups: VecDeque<usize>) -> String {
     while *cups.get(0).unwrap() != 1 {
         let cup = cups.pop_front().unwrap();
         cups.push_back(cup);
@@ -88,5 +84,5 @@ fn get_result(mut cups: VecDeque<usize>) -> String {
 fn main() {
     let inputs = parse_inputs();
 
-    println!("A: {}", get_result(play_game(&inputs)));
+    println!("A: {}", get_result_a(play_game(&inputs, 100)));
 }
