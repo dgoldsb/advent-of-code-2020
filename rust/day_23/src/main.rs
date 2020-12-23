@@ -2,51 +2,60 @@ use aoc::parse_lines;
 use std::collections::{HashMap, VecDeque};
 
 struct Cups {
-    cups: HashMap<usize, (usize, usize)>,
+    cups: HashMap<usize, usize>,
 }
 
 impl Cups {
     fn from_deque(deque: &VecDeque<usize>) -> Cups {
         // A ghetto linked list with quick access to each item
-        let mut cups: HashMap<usize, (usize, usize)> = HashMap::new();
+        let mut cups: HashMap<usize, usize> = HashMap::new();
         let len = deque.len();
-        let mut previous = deque.get(len - 1).unwrap().clone();
         for i in 0..deque.len() {
             let cup = deque.get(i).unwrap().clone();
             let next = deque.get((i + 1) % len).unwrap().clone();
-            cups.insert(cup, (previous, next));
-            previous = cup;
+            cups.insert(cup, next);
         }
         return Cups { cups };
     }
 
     fn get_after(&self, value: usize) -> usize {
-        return self.cups.get(&value).unwrap().1;
+        return self.cups.get(&value).unwrap().clone();
     }
 
     fn remove_after(&mut self, value: usize) -> usize {
-        let a_ll = self.cups.get(&value).unwrap().clone();
-        let b_ll = self.cups.get(&a_ll.1).unwrap().clone();
-        let c_ll = self.cups.get(&b_ll.1).unwrap().clone();
+        let a = self.cups.get(&value).unwrap().clone();
+        let b = self.cups.get(&a).unwrap().clone();
 
         // Update the record before.
-        self.cups.insert(b_ll.0, (a_ll.0, b_ll.1));
-        self.cups.insert(b_ll.1, (b_ll.0, c_ll.1));
+        self.cups.insert(value, b);
 
         // Remove the record we are returning.
-        self.cups.remove(&a_ll.1);
+        self.cups.remove(&a);
 
-        return a_ll.1;
+        return a;
+    }
+
+    fn remove_three_after(&mut self, value: usize) -> (usize, usize, usize) {
+        let a = self.cups.get(&value).unwrap().clone();
+        let b = self.cups.get(&a).unwrap().clone();
+        let c = self.cups.get(&b).unwrap().clone();
+        let d = self.cups.get(&c).unwrap().clone();
+
+        // Update the record before.
+        self.cups.insert(value, d);
+
+        // Remove the record we are returning.
+        self.cups.remove(&a);
+
+        return (a, b, c);
     }
 
     fn insert_after(&mut self, after: usize, value: usize) {
-        let a_ll = self.cups.get(&after).unwrap().clone();
-        let b_ll = self.cups.get(&a_ll.1).unwrap().clone();
+        let a = self.cups.get(&after).unwrap().clone();
 
         // Update the record before.
-        self.cups.insert(after, (a_ll.0, value));
-        self.cups.insert(value, (after, a_ll.1));
-        self.cups.insert(a_ll.1, (value, b_ll.1));
+        self.cups.insert(after, value);
+        self.cups.insert(value, a);
     }
 }
 
@@ -69,11 +78,7 @@ fn play_game(start: &VecDeque<usize>, moves: usize) -> Cups {
     for _ in 0..moves {
         // The crab picks up the three cups that are immediately clockwise of the current cup. They
         // are removed from the circle; cup spacing is adjusted as necessary to maintain the circle.
-        let picked_up = (
-            cups.remove_after(current_cup),
-            cups.remove_after(current_cup),
-            cups.remove_after(current_cup),
-        );
+        let picked_up = cups.remove_three_after(current_cup);
 
         // The crab selects a destination cup: the cup with a label equal to the current cup's label
         // minus one. If this would select one of the cups that was just picked up, the crab will
