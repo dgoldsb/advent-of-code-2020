@@ -66,6 +66,14 @@ fn play_game(start: &VecDeque<usize>, moves: usize) -> VecDeque<usize> {
     return cups;
 }
 
+fn pad_queue(input: &VecDeque<usize>, size: usize) -> VecDeque<usize> {
+    let mut result = input.clone();
+    for i in input.len()..size {
+        result.push_back(i+1);
+    }
+    return result;
+}
+
 fn get_result_a(mut cups: VecDeque<usize>) -> String {
     while *cups.get(0).unwrap() != 1 {
         let cup = cups.pop_front().unwrap();
@@ -81,8 +89,19 @@ fn get_result_a(mut cups: VecDeque<usize>) -> String {
     return result;
 }
 
+fn get_result_b(mut cups: VecDeque<usize>) -> usize {
+    while *cups.get(0).unwrap() != 1 {
+        let cup = cups.pop_front().unwrap();
+        cups.push_back(cup);
+    }
+
+    return cups.get(1).unwrap() * cups.get(2).unwrap();
+}
+
 fn main() {
     let inputs = parse_inputs();
 
     println!("A: {}", get_result_a(play_game(&inputs, 100)));
+    let padded_queue = pad_queue(&inputs, 1000000);
+    println!("B: {}", get_result_b(play_game(&padded_queue, 10000000)));
 }
