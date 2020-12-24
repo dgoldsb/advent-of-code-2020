@@ -7,7 +7,8 @@ struct Cups {
 
 impl Cups {
     fn from_deque(deque: &VecDeque<usize>) -> Cups {
-        // A ghetto linked list with quick access to each item
+        // A ghetto linked list with quick access to each item.
+        // TODO: This could be an array as our indices are usize without gaps, would be faster as we skip hashing.
         let mut cups: HashMap<usize, usize> = HashMap::new();
         let len = deque.len();
         for i in 0..deque.len() {
