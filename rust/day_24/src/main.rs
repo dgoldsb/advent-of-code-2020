@@ -1,5 +1,5 @@
 use aoc::parse_lines;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 fn resolve_tile(input: &String) -> (isize, isize) {
     let mut iter = input.chars();
@@ -32,7 +32,7 @@ fn resolve_tile(input: &String) -> (isize, isize) {
     return (x, y);
 }
 
-fn part_a(inputs: &Vec<String>) -> usize {
+fn get_tiles(inputs: &Vec<String>) -> HashMap<(isize, isize), bool> {
     let mut tiles: HashMap<(isize, isize), bool> = HashMap::new();
 
     for line in inputs {
@@ -43,12 +43,68 @@ fn part_a(inputs: &Vec<String>) -> usize {
             None => tiles.insert(tile, true),
         };
     }
+    return tiles;
+}
 
-    return tiles.iter().filter(|&t| *t.1).count();
+fn part_a(inputs: &Vec<String>) -> usize {
+    return get_tiles(inputs).iter().filter(|&t| *t.1).count();
+}
+
+fn get_neighborhood(t: &(isize, isize)) -> Vec<(isize, isize)> {
+    return vec![
+        (t.0 + 1, t.1),
+        (t.0 - 1, t.1),
+        (t.0, t.1 + 1),
+        (t.0, t.1 - 1),
+        (t.0 + 1, t.1 - 1),
+        (t.0 - 1, t.1 + 1),
+    ];
+}
+
+fn next_state(old: &HashSet<(isize, isize)>) -> HashSet<(isize, isize)> {
+    let mut new = HashSet::new();
+    let mut candidates = HashSet::new();
+
+    for tile in old {
+        candidates.insert(tile.clone());
+        for neighbor in get_neighborhood(tile) {
+            candidates.insert(neighbor);
+        }
+    }
+
+    for candidate in candidates {
+        let mut count = 0;
+        for n in get_neighborhood(&candidate) {
+            if old.contains(&n) {
+                count += 1;
+            }
+        }
+
+        if (count == 2) || ((count == 1) && old.contains(&candidate)) {
+            new.insert(candidate);
+        }
+    }
+
+    return new;
+}
+
+fn part_b(inputs: &Vec<String>) -> usize {
+    let mut tiles: HashSet<(isize, isize)> = get_tiles(inputs)
+        .iter()
+        .filter(|&t| *t.1)
+        .map(|t| *t.0)
+        .collect();
+
+    for _ in 0..100 {
+        tiles = next_state(&tiles);
+    }
+
+    return tiles.len();
 }
 
 fn main() {
     let inputs = parse_lines();
 
     println!("A: {}", part_a(&inputs));
+    println!("B: {}", part_b(&inputs));
 }
