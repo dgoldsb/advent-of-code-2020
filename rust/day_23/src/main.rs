@@ -1,62 +1,56 @@
 use aoc::parse_lines;
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 
 struct Cups {
-    cups: HashMap<usize, usize>,
+    cups: Vec<usize>,
 }
 
 impl Cups {
-    fn from_deque(deque: &VecDeque<usize>) -> Cups {
+    fn from_dequeue(dequeue: &VecDeque<usize>) -> Cups {
         // A ghetto linked list with quick access to each item.
-        // TODO: This could be an array as our indices are usize without gaps, would be faster as we skip hashing.
-        let mut cups: HashMap<usize, usize> = HashMap::new();
-        let len = deque.len();
-        for i in 0..deque.len() {
-            let cup = deque.get(i).unwrap().clone();
-            let next = deque.get((i + 1) % len).unwrap().clone();
-            cups.insert(cup, next);
+        let len = dequeue.len();
+        let mut cups = vec![0; len + 1];
+
+        for i in 0..len {
+            let cup = dequeue.get(i).unwrap().clone();
+            let next = dequeue.get((i + 1) % len).unwrap().clone();
+            cups[cup] = next;
         }
         return Cups { cups };
     }
 
     fn get_after(&self, value: usize) -> usize {
-        return self.cups.get(&value).unwrap().clone();
+        return self.cups[value];
     }
 
     fn remove_after(&mut self, value: usize) -> usize {
-        let a = self.cups.get(&value).unwrap().clone();
-        let b = self.cups.get(&a).unwrap().clone();
+        let a = self.cups[value];
+        let b = self.cups[a];
 
         // Update the record before.
-        self.cups.insert(value, b);
-
-        // Remove the record we are returning.
-        self.cups.remove(&a);
+        self.cups[value] = b;
 
         return a;
     }
 
     fn remove_three_after(&mut self, value: usize) -> (usize, usize, usize) {
-        let a = self.cups.get(&value).unwrap().clone();
-        let b = self.cups.get(&a).unwrap().clone();
-        let c = self.cups.get(&b).unwrap().clone();
-        let d = self.cups.get(&c).unwrap().clone();
+        let a = self.cups[value];
+        let b = self.cups[a];
+        let c = self.cups[b];
+        let d = self.cups[c];
 
         // Update the record before.
-        self.cups.insert(value, d);
-
-        // Remove the record we are returning.
-        self.cups.remove(&a);
+        self.cups[value] = d;
 
         return (a, b, c);
     }
 
     fn insert_after(&mut self, after: usize, value: usize) {
-        let a = self.cups.get(&after).unwrap().clone();
+        let a = self.cups[after];
 
         // Update the record before.
-        self.cups.insert(after, value);
-        self.cups.insert(value, a);
+        self.cups[after] = value;
+        self.cups[value] = a;
     }
 }
 
@@ -71,7 +65,7 @@ fn parse_inputs() -> VecDeque<usize> {
 }
 
 fn play_game(start: &VecDeque<usize>, moves: usize) -> Cups {
-    let mut cups = Cups::from_deque(start);
+    let mut cups = Cups::from_dequeue(start);
     let max_cup = start.iter().max().unwrap().clone();
 
     // Now we play cups!
@@ -122,8 +116,11 @@ fn pad_queue(input: &VecDeque<usize>, size: usize) -> VecDeque<usize> {
 
 fn get_result_a(mut cups: Cups) -> String {
     let mut result = "".to_string();
-    while cups.cups.len() > 1 {
-        result += &cups.remove_after(1).to_string();
+
+    let mut last = 1;
+    for _ in 0..(cups.cups.len() - 2) {
+        last = cups.remove_after(last);
+        result += &last.to_string();
     }
     return result;
 }
